@@ -462,6 +462,7 @@ function actualizarListaClientes() {
                     <th>Teléfono</th>
                     <th>Email</th>
                     <th>Sucursal</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -476,6 +477,10 @@ function actualizarListaClientes() {
                 <td>${cliente.telefono || 'N/A'}</td>
                 <td>${cliente.correo || 'N/A'}</td>
                 <td><span class="badge badge-${cliente.sucursal.toLowerCase()}">${cliente.sucursal}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="openEditClientModal(${cliente.cliente_id})">Editar</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteClient(${cliente.cliente_id})">Eliminar</button>
+                </td>
             </tr>
         `;
     });
@@ -509,6 +514,7 @@ function actualizarListaEquipos() {
                     <th>Cliente</th>
                     <th>Área</th>
                     <th>Sucursal</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -524,6 +530,10 @@ function actualizarListaEquipos() {
                 <td>${equipo.cliente_nombre || 'N/A'}</td>
                 <td>${equipo.area_nombre || 'N/A'}</td>
                 <td><span class="badge badge-${equipo.sucursal.toLowerCase()}">${equipo.sucursal}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="openEditEquipmentModal(${equipo.equipo_id})">Editar</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteEquipment(${equipo.equipo_id})">Eliminar</button>
+                </td>
             </tr>
         `;
     });
@@ -927,8 +937,202 @@ document.getElementById('limpiarDatos')?.addEventListener('click', function() {
 });
 
 // ============================================
+// FUNCIONES DE EDICIÓN Y ELIMINACIÓN DE CLIENTES
+// ============================================
+
+function openEditClientModal(clientId) {
+    const cliente = datos.clientes.find(c => c.cliente_id === clientId);
+    if (!cliente) {
+        mostrarAlerta('Cliente no encontrado', 'error');
+        return;
+    }
+
+    document.getElementById('editClientId').value = cliente.cliente_id;
+    document.getElementById('editRazonSocial').value = cliente.nombre;
+    document.getElementById('editRucId').value = cliente.cedula_ruc;
+    document.getElementById('editDireccionFiscal').value = cliente.direccion;
+    document.getElementById('editTelefono').value = cliente.telefono;
+    document.getElementById('editEmail').value = cliente.correo;
+
+    document.getElementById('editClientModal').style.display = 'block';
+}
+
+function closeEditClientModal() {
+    document.getElementById('editClientModal').style.display = 'none';
+}
+
+async function deleteClient(clientId) {
+    if (!confirm('¿Está seguro que desea eliminar este cliente?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/clientes/${clientId}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            mostrarAlerta('Cliente eliminado exitosamente');
+            await cargarClientes(); // Recargar lista
+        } else {
+            mostrarAlerta(result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al eliminar cliente', 'error');
+    }
+}
+
+document.getElementById('editClientForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const clientId = document.getElementById('editClientId').value;
+    const razonSocial = document.getElementById('editRazonSocial').value.trim();
+    const rucId = document.getElementById('editRucId').value.trim();
+    const direccionFiscal = document.getElementById('editDireccionFiscal').value.trim();
+    const telefono = document.getElementById('editTelefono').value.trim();
+    const email = document.getElementById('editEmail').value.trim();
+
+    // Validaciones
+    if (!razonSocial || !rucId || !telefono || !email) {
+        mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
+        return;
+    }
+
+    const clienteData = {
+        nombre: razonSocial,
+        cedula_ruc: rucId,
+        direccion: direccionFiscal,
+        telefono: telefono,
+        correo: email
+    };
+
+    try {
+        const response = await fetch(`/api/clientes/${clientId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(clienteData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            mostrarAlerta('Cliente actualizado exitosamente');
+            closeEditClientModal();
+            await cargarClientes(); // Recargar lista
+        } else {
+            mostrarAlerta(result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al actualizar cliente', 'error');
+    }
+});
+// ============================================
+// FUNCIONES DE EDICIÓN Y ELIMINACIÓN DE EQUIPOS
+// ============================================
+
+function openEditEquipmentModal(equipmentId) {
+    const equipo = datos.equipos.find(e => e.equipo_id === equipmentId);
+    if (!equipo) {
+        mostrarAlerta('Equipo no encontrado', 'error');
+        return;
+    }
+
+    document.getElementById('editEquipmentId').value = equipo.equipo_id;
+    document.getElementById('editTipoEquipo').value = equipo.nombre;
+    document.getElementById('editModelo').value = equipo.modelo;
+    document.getElementById('editNumeroSerie').value = equipo.serie;
+    document.getElementById('editCodigoInterno').value = equipo.codigo_interno;
+    document.getElementById('editMarca').value = equipo.marca;
+
+    document.getElementById('editEquipmentModal').style.display = 'block';
+}
+
+function closeEditEquipmentModal() {
+    document.getElementById('editEquipmentModal').style.display = 'none';
+}
+
+async function deleteEquipment(equipmentId) {
+    if (!confirm('¿Está seguro que desea eliminar este equipo?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/equipos/${equipmentId}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            mostrarAlerta('Equipo eliminado exitosamente');
+            await cargarEquipos(); // Recargar lista
+        } else {
+            mostrarAlerta(result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al eliminar equipo', 'error');
+    }
+}
+
+document.getElementById('editEquipmentForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const equipmentId = document.getElementById('editEquipmentId').value;
+    const tipoEquipo = document.getElementById('editTipoEquipo').value.trim();
+    const modelo = document.getElementById('editModelo').value.trim();
+    const numeroSerie = document.getElementById('editNumeroSerie').value.trim();
+    const codigoInterno = document.getElementById('editCodigoInterno').value.trim();
+    const marca = document.getElementById('editMarca').value.trim();
+
+    // Validaciones
+    if (!tipoEquipo || !modelo || !numeroSerie || !marca) {
+        mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
+        return;
+    }
+
+    const equipmentData = {
+        nombre: tipoEquipo,
+        modelo: modelo,
+        serie: numeroSerie,
+        codigo_interno: codigoInterno,
+        marca: marca
+    };
+
+    try {
+        const response = await fetch(`/api/equipos/${equipmentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(equipmentData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            mostrarAlerta('Equipo actualizado exitosamente');
+            closeEditEquipmentModal();
+            await cargarEquipos(); // Recargar lista
+        } else {
+            mostrarAlerta(result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al actualizar equipo', 'error');
+    }
+});
+
+// ============================================
 // INICIALIZACIÓN
 // ============================================
+
 
 document.addEventListener('DOMContentLoaded', async function () {
     console.log('🚀 Sistema de Calibraciones - BD Distribuida Tegmetro');

@@ -1,35 +1,14 @@
 // test-connection.js
-const sql = require('mssql');
-require('dotenv').config();
-
-// Configuración de conexión
-const config = {
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    server: process.env.DB_SERVER,
-    database: process.env.DB_DATABASE,
-    options: {
-        encrypt: true,
-        trustServerCertificate: true,
-        enableArithAbort: true
-    }
-};
+const { getConnection, sql } = require('./db');
 
 console.log('===========================================');
 console.log('🧪 PRUEBA DE CONEXIÓN A SQL SERVER');
 console.log('===========================================\n');
 
-console.log('📝 Configuración:');
-console.log('   - Servidor:', config.server);
-console.log('   - Base de datos:', config.database);
-console.log('   - Usuario:', config.user);
-console.log('   - Contraseña:', config.password ? '***' : '(vacía)');
-console.log('\n⏳ Intentando conectar...\n');
-
 async function testConnection() {
     try {
         // Intentar conectar
-        const pool = await sql.connect(config);
+        const pool = await getConnection();
         console.log('✅ ¡CONEXIÓN EXITOSA!\n');
 
         // Probar una consulta simple

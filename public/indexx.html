@@ -16,7 +16,7 @@
             <!-- Se llenarÃ¡ con JavaScript -->
         </div>
         <button onclick="cerrarSesion()" class="btn btn-danger" style="padding: 5px 15px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Cerrar SesiÃ³n
+            Cerrar Sesión
         </button>
     </div>
 </div>
@@ -47,7 +47,7 @@
         <div id="alertSuccess" class="alert alert-success"></div>
         <div id="alertError" class="alert alert-error"></div>
 
-        <!-- PestaÃ±a de Registro de Clientes -->
+        <!-- Pestaña de Registro de Clientes -->
         <div id="clientes" class="tab-content active">
             <h2> Registrar Nuevo Cliente</h2>
             <form id="clienteForm">
@@ -82,7 +82,7 @@
             </form>
         </div>
 
-        <!-- PestaÃ±a de Registro de Equipos -->
+        <!-- Pestaña de Registro de Equipos -->
         <div id="equipos" class="tab-content">
             <h2> Registrar Equipo para Calibración</h2>
 
@@ -90,7 +90,7 @@
                 <label for="buscarCliente" class="required">Buscar Cliente</label>
                 <div class="search-box">
                     <span class="search-icon"></span>
-                    <input type="text" id="buscarCliente" placeholder="Buscar por nombre, RUC o cÃ³digo...">
+                    <input type="text" id="buscarCliente" placeholder="Buscar por nombre, RUC o código...">
                 </div>
                 <div id="resultadosClientes"></div>
                 <div id="clienteSeleccionado" class="client-info" style="display: none;"></div>
@@ -106,7 +106,7 @@
                             <option value="">Seleccionar tipo...</option>
                             <option value="Multi­metro">Multi­metro</option>
                             <option value="Osciloscopio">Osciloscopio</option>
-                            <option value="Generador de SeÃ±ales">Generador de Señales</option>
+                            <option value="Generador de Señales">Generador de Señales</option>
                             <option value="Analizador de Espectro">Analizador de Espectro</option>
                             <option value="Fuente de Alimentacion">Fuente de Alimentacion</option>
                             <option value="Calibrador de Temperatura">Calibrador de Temperatura</option>
@@ -141,7 +141,7 @@
                             <option value="">Seleccionar tipo...</option>
                             <option value="SAE">SAE</option>
                             <option value="A2LA">A2LA</option>
-                            <option value="VerificaciÃ³n">VerificaciÃ³n (Sin acreditación)</option>
+                            <option value="Verificación">Verificación (Sin acreditación)</option>
                         </select>
                     </div>
                 </div>
@@ -164,7 +164,7 @@
             </form>
         </div>
 
-        <!-- PestaÃ±a de Datos Guardados -->
+        <!-- Pestaña de Datos Guardados -->
         <div id="datos" class="tab-content">
             <h2>Datos Guardados en el Sistema </h2>
 
@@ -207,11 +207,11 @@
             
         </div>
 
-        <!-- PestaÃ±a Sprint 2: CalibraciÃ³n -->
+        <!-- Pestaña Sprint 2: Calibración -->
         <div id="calibracion" class="tab-content">
             <h2> Calibracion de Equipos Pendientes</h2>
             <p class="muted-text">
-                Aquí­ el tecnico selecciona un equipo pendiente, registra las condiciones ambientales,
+                Aquí el técnico selecciona un equipo pendiente, registra las condiciones ambientales,
                 resultados y manejo de no conformidades. (El login de tecnico se integra aparte).
             </p>
 
@@ -254,7 +254,7 @@
                         <div class="form-group">
                             <label for="detalleResultados" class="required">Detalle de resultados</label>
                             <textarea id="detalleResultados" rows="3" required
-                                placeholder="Resumen de mediciones, incertidumbre, observaciones tÃ©cnicas..."></textarea>
+                                placeholder="Resumen de mediciones, incertidumbre, observaciones técnicas..."></textarea>
                         </div>
                     </div>
 
@@ -264,9 +264,9 @@
                             <label for="accionNoConformidad">Accion tomada</label>
                             <select id="accionNoConformidad" disabled>
                                 <option value="">Seleccionar...</option>
-                                <option value="ReparaciÃ³n">Reparación</option>
+                                                    <option value="Reparación">Reparación</option>
                                 <option value="Ajuste">Ajuste</option>
-                                <option value="Sin acciÃ³n">Sin acción (solo registro)</option>
+                                <option value="Sin acción">Sin acción (solo registro)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -275,7 +275,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Guardar CalibraciÃ³n</button>
+                    <button type="submit" class="btn btn-primary">Guardar Calibración</button>
                     <button type="button" id="btnGenerarCertificado" class="btn btn-success"
                         style="margin-left:10px; display:none;">
                         Generar Certificado
@@ -283,13 +283,13 @@
                 </form>
 
                 <p class="muted-text" style="margin-top:10px;">
-                    Nota: para integrar el login de tÃ©cnico, se puede usar una variable global
+                    Nota: para integrar el login de técnico, se puede usar una variable global
                     <code>window.tecnicoActual</code> para insertar su nombre en el certificado.
                 </p>
             </div>
         </div>
 
-        <!-- PestaÃ±a Sprint 2: Certificados -->
+        <!-- Pestaña Sprint 2: Certificados -->
         <div id="certificados" class="tab-content">
             <h2> Certificados de Calibracion</h2>
             <p class="muted-text">
@@ -307,6 +307,70 @@
     </footer>
 
     <script src="script.js"></script>
+
+    <!-- Modal para editar cliente -->
+    <div id="editClientModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditClientModal()">&times;</span>
+            <h2>Editar Cliente</h2>
+            <form id="editClientForm">
+                <input type="hidden" id="editClientId">
+                <div class="form-group">
+                    <label for="editRazonSocial">Razón Social / Nombre</label>
+                    <input type="text" id="editRazonSocial" required>
+                </div>
+                <div class="form-group">
+                    <label for="editRucId">RUC / Identificación Única</label>
+                    <input type="text" id="editRucId" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDireccionFiscal">Dirección Fiscal</label>
+                    <input type="text" id="editDireccionFiscal">
+                </div>
+                <div class="form-group">
+                    <label for="editTelefono">Teléfono de Contacto</label>
+                    <input type="text" id="editTelefono" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email Corporativo</label>
+                    <input type="email" id="editEmail" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para editar equipo -->
+    <div id="editEquipmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditEquipmentModal()">&times;</span>
+            <h2>Editar Equipo</h2>
+            <form id="editEquipmentForm">
+                <input type="hidden" id="editEquipmentId">
+                <div class="form-group">
+                    <label for="editTipoEquipo">Tipo de Equipo</label>
+                    <input type="text" id="editTipoEquipo" required>
+                </div>
+                <div class="form-group">
+                    <label for="editModelo">Modelo</label>
+                    <input type="text" id="editModelo" required>
+                </div>
+                <div class="form-group">
+                    <label for="editNumeroSerie">Número de Serie</label>
+                    <input type="text" id="editNumeroSerie" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCodigoInterno">Código Interno</label>
+                    <input type="text" id="editCodigoInterno">
+                </div>
+                <div class="form-group">
+                    <label for="editMarca">Marca / Fabricante</label>
+                    <input type="text" id="editMarca" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
 </body>
 
 </html>

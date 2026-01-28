@@ -222,6 +222,44 @@ app.get('/api/clientes', async (req, res) => {
     }
 });
 
+app.put('/api/clientes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre, cedula_ruc, direccion, telefono, correo } = req.body;
+
+        const pool = await getConnection();
+        await pool.request()
+            .input('id', sql.Int, id)
+            .input('nombre', sql.VarChar, nombre)
+            .input('cedula_ruc', sql.VarChar, cedula_ruc)
+            .input('direccion', sql.VarChar, direccion)
+            .input('telefono', sql.VarChar, telefono)
+            .input('correo', sql.VarChar, correo)
+            .query('UPDATE Cliente_Quito SET nombre = @nombre, cedula_ruc = @cedula_ruc, direccion = @direccion, telefono = @telefono, correo = @correo WHERE cliente_id = @id');
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error al actualizar cliente:', error);
+        res.status(500).json({ success: false, error: 'Error al actualizar cliente' });
+    }
+});
+
+app.delete('/api/clientes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const pool = await getConnection();
+        await pool.request()
+            .input('id', sql.Int, id)
+            .query('DELETE FROM Cliente_Quito WHERE cliente_id = @id');
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error al eliminar cliente:', error);
+        res.status(500).json({ success: false, error: 'Error al eliminar cliente' });
+    }
+});
+
+
 
 // ============================================
 // API PARA EQUIPOS
@@ -306,6 +344,72 @@ app.get('/api/equipos', async (req, res) => {
             success: false,
             error: error.message
         });
+    }
+});
+
+app.put('/api/equipos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre, modelo, serie, codigo_interno, marca } = req.body;
+
+        const pool = await getConnection();
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            await transaction.request()
+                .input('id', sql.Int, id)
+                .input('nombre', sql.VarChar, nombre)
+                .input('codigo_interno', sql.VarChar, codigo_interno)
+                .query('UPDATE EquipoCliente_ventas_Quito SET nombre = @nombre, codigo_interno = @codigo_interno WHERE equipo_id = @id');
+
+            await transaction.request()
+                .input('id', sql.Int, id)
+                .input('modelo', sql.VarChar, modelo)
+                .input('serie', sql.VarChar, serie)
+                .input('marca', sql.VarChar, marca)
+                .query('UPDATE EquipoCliente_tecnico_Quito SET modelo = @modelo, serie = @serie, marca = @marca WHERE equipo_id = @id');
+
+            await transaction.commit();
+            res.json({ success: true });
+        } catch (error) {
+            await transaction.rollback();
+            console.error('Error al actualizar equipo:', error);
+            res.status(500).json({ success: false, error: 'Error al actualizar equipo' });
+        }
+    } catch (error) {
+        console.error('Error al actualizar equipo:', error);
+        res.status(500).json({ success: false, error: 'Error al actualizar equipo' });
+    }
+});
+
+app.delete('/api/equipos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const pool = await getConnection();
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            await transaction.request()
+                .input('id', sql.Int, id)
+                .query('DELETE FROM EquipoCliente_ventas_Quito WHERE equipo_id = @id');
+
+            await transaction.request()
+                .input('id', sql.Int, id)
+                .query('DELETE FROM EquipoCliente_tecnico_Quito WHERE equipo_id = @id');
+
+            await transaction.commit();
+            res.json({ success: true });
+        } catch (error) {
+            await transaction.rollback();
+            console.error('Error al eliminar equipo:', error);
+            res.status(500).json({ success: false, error: 'Error al eliminar equipo' });
+        }
+    } catch (error) {
+        console.error('Error al eliminar equipo:', error);
+        res.status(500).json({ success: false, error: 'Error al eliminar equipo' });
     }
 });
 

@@ -13,17 +13,17 @@
         <div class="user-info-bar" style="background: #98daeb; padding: 10px 0; border-bottom: 2px solid #bdc3c7;">
     <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
         <div id="userInfo" style="font-size: 14px; color: #2c3e50;">
-            <!-- Se llenará con JavaScript -->
+            <!-- Se llenarÃ¡ con JavaScript -->
         </div>
         <button onclick="cerrarSesion()" class="btn btn-danger" style="padding: 5px 15px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Cerrar Sesión
+            Cerrar SesiÃ³n
         </button>
     </div>
 </div>
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <span class="logo-icon">🔧</span>
+                    <span class="logo-icon"></span>
                     <div class="logo-text">
                         <h1 class="logo-title">TEGMETRO</h1>
                         <p class="logo-subtitle">Sistema de Calibraciones</p>
@@ -35,7 +35,7 @@
                     <div class="tab" data-tab="equipos">Registro de Equipos</div>
                     <div class="tab" data-tab="datos">Datos Guardados</div>
                     <!-- Nuevos tabs Sprint 2 -->
-                    <div class="tab" data-tab="calibracion">Calibración de Equipos</div>
+                    <div class="tab" data-tab="calibracion">Calibracion de Equipos</div>
                     <div class="tab" data-tab="certificados">Certificados</div>
                 </div>
             </div>
@@ -47,9 +47,9 @@
         <div id="alertSuccess" class="alert alert-success"></div>
         <div id="alertError" class="alert alert-error"></div>
 
-        <!-- Pestaña de Registro de Clientes -->
+        <!-- PestaÃ±a de Registro de Clientes -->
         <div id="clientes" class="tab-content active">
-            <h2>📝 Registrar Nuevo Cliente</h2>
+            <h2> Registrar Nuevo Cliente</h2>
             <form id="clienteForm">
                 <div class="form-row">
                     <div class="form-group">
@@ -82,15 +82,15 @@
             </form>
         </div>
 
-        <!-- Pestaña de Registro de Equipos -->
+        <!-- PestaÃ±a de Registro de Equipos -->
         <div id="equipos" class="tab-content">
-            <h2>⚙️ Registrar Equipo para Calibración</h2>
+            <h2> Registrar Equipo para Calibración</h2>
 
             <div class="client-selector">
                 <label for="buscarCliente" class="required">Buscar Cliente</label>
                 <div class="search-box">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="buscarCliente" placeholder="Buscar por nombre, RUC o código...">
+                    <span class="search-icon"></span>
+                    <input type="text" id="buscarCliente" placeholder="Buscar por nombre, RUC o cÃ³digo...">
                 </div>
                 <div id="resultadosClientes"></div>
                 <div id="clienteSeleccionado" class="client-info" style="display: none;"></div>
@@ -104,11 +104,11 @@
                         <label for="tipoEquipo" class="required">Tipo de Equipo</label>
                         <select id="tipoEquipo" required>
                             <option value="">Seleccionar tipo...</option>
-                            <option value="Multímetro">Multímetro</option>
+                            <option value="Multi­metro">Multi­metro</option>
                             <option value="Osciloscopio">Osciloscopio</option>
-                            <option value="Generador de Señales">Generador de Señales</option>
+                            <option value="Generador de SeÃ±ales">Generador de Señales</option>
                             <option value="Analizador de Espectro">Analizador de Espectro</option>
-                            <option value="Fuente de Alimentación">Fuente de Alimentación</option>
+                            <option value="Fuente de Alimentacion">Fuente de Alimentacion</option>
                             <option value="Calibrador de Temperatura">Calibrador de Temperatura</option>
                             <option value="Otro">Otro</option>
                         </select>
@@ -141,7 +141,7 @@
                             <option value="">Seleccionar tipo...</option>
                             <option value="SAE">SAE</option>
                             <option value="A2LA">A2LA</option>
-                            <option value="Verificación">Verificación (Sin acreditación)</option>
+                            <option value="VerificaciÃ³n">VerificaciÃ³n (Sin acreditación)</option>
                         </select>
                     </div>
                 </div>
@@ -150,7 +150,7 @@
                     <div class="form-group">
                         <label for="prioridad" class="required">Prioridad</label>
                         <select id="prioridad" required>
-                            <option value="Normal">Normal (5 días hábiles)</option>
+                            <option value="Normal">Normal (5 dis hábiles)</option>
                             <option value="Urgente">Urgente</option>
                         </select>
                     </div>
@@ -164,9 +164,9 @@
             </form>
         </div>
 
-        <!-- Pestaña de Datos Guardados -->
+        <!-- PestaÃ±a de Datos Guardados -->
         <div id="datos" class="tab-content">
-            <h2>📊 Datos Guardados en el Sistema</h2>
+            <h2>Datos Guardados en el Sistema </h2>
 
             <div class="form-row">
                 <button id="exportarDatos" class="btn btn-success">Exportar Datos a JSON</button>
@@ -207,12 +207,12 @@
             
         </div>
 
-        <!-- Pestaña Sprint 2: Calibración -->
+        <!-- PestaÃ±a Sprint 2: CalibraciÃ³n -->
         <div id="calibracion" class="tab-content">
-            <h2>🧪 Calibración de Equipos Pendientes</h2>
+            <h2> Calibracion de Equipos Pendientes</h2>
             <p class="muted-text">
-                Aquí el técnico selecciona un equipo pendiente, registra las condiciones ambientales,
-                resultados y manejo de no conformidades. (El login de técnico se integra aparte).
+                Aquí­ el tecnico selecciona un equipo pendiente, registra las condiciones ambientales,
+                resultados y manejo de no conformidades. (El login de tecnico se integra aparte).
             </p>
 
             <h3 style="margin-top:20px;">Equipos pendientes de calibración</h3>
@@ -254,19 +254,19 @@
                         <div class="form-group">
                             <label for="detalleResultados" class="required">Detalle de resultados</label>
                             <textarea id="detalleResultados" rows="3" required
-                                placeholder="Resumen de mediciones, incertidumbre, observaciones técnicas..."></textarea>
+                                placeholder="Resumen de mediciones, incertidumbre, observaciones tÃ©cnicas..."></textarea>
                         </div>
                     </div>
 
                     <h4>No conformidades (solo si aplica)</h4>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="accionNoConformidad">Acción tomada</label>
+                            <label for="accionNoConformidad">Accion tomada</label>
                             <select id="accionNoConformidad" disabled>
                                 <option value="">Seleccionar...</option>
-                                <option value="Reparación">Reparación</option>
+                                <option value="ReparaciÃ³n">Reparación</option>
                                 <option value="Ajuste">Ajuste</option>
-                                <option value="Sin acción">Sin acción (solo registro)</option>
+                                <option value="Sin acciÃ³n">Sin acción (solo registro)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -275,7 +275,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Guardar Calibración</button>
+                    <button type="submit" class="btn btn-primary">Guardar CalibraciÃ³n</button>
                     <button type="button" id="btnGenerarCertificado" class="btn btn-success"
                         style="margin-left:10px; display:none;">
                         Generar Certificado
@@ -283,15 +283,15 @@
                 </form>
 
                 <p class="muted-text" style="margin-top:10px;">
-                    Nota: para integrar el login de técnico, se puede usar una variable global
+                    Nota: para integrar el login de tÃ©cnico, se puede usar una variable global
                     <code>window.tecnicoActual</code> para insertar su nombre en el certificado.
                 </p>
             </div>
         </div>
 
-        <!-- Pestaña Sprint 2: Certificados -->
+        <!-- PestaÃ±a Sprint 2: Certificados -->
         <div id="certificados" class="tab-content">
-            <h2>📄 Certificados de Calibración</h2>
+            <h2> Certificados de Calibracion</h2>
             <p class="muted-text">
                 Aquí se listan los certificados generados. Al generarlos se abre una ventana imprimible,
                 que puede guardarse como PDF desde el navegador.

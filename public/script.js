@@ -596,55 +596,196 @@ function actualizarListaCertificados() {
         </div>
     `;
     return;
+
+    let html = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Marca/Modelo</th>
+                    <th>Serie</th>
+                    <th>Cliente</th>
+                    <th>Área</th>
+                    <th>Sucursal</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    datos.equipos.forEach(equipo => {
+        html += `
+            <tr>
+                <td>${equipo.equipo_id}</td>
+                <td>${equipo.nombre}</td>
+                <td>${equipo.marca} / ${equipo.modelo}</td>
+                <td>${equipo.serie}</td>
+                <td>${equipo.cliente_nombre || 'N/A'}</td>
+                <td>${equipo.area_nombre || 'N/A'}</td>
+                <td><span class="badge badge-${equipo.sucursal.toLowerCase()}">${equipo.sucursal}</span></td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    contenedor.innerHTML = html;
 }
 
-function actualizarListaVendedores(){
-    const contenedor = document.getElementById('listaVendedores'); 
+function actualizarListaVendedores() {
+    const contenedor = document.getElementById('listaVendedores');
     if (!contenedor) return;
 
-    if(datos.vendedores.length==0){
+    if (!datos.vendedores || datos.vendedores.length === 0) {
         contenedor.innerHTML = `
-        <div class="empty-state">
-            <p>👥</p>
-            <p>No hay vendedores Registrados</p>
-        </div>
+            <div class="empty-state">
+                <p>👥</p>
+                <p>No hay vendedores registrados</p>
+            </div>
         `;
         return;
     }
-    
+
+    let html = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Cédula / RUC</th>
+                    <th>Teléfono</th>
+                    <th>Correo</th>
+                    <th>Sucursal</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    datos.vendedores.forEach(vendedor => {
+        html += `
+            <tr>
+                <td>${vendedor.vendedor_id}</td>
+                <td>${vendedor.nombre}</td>
+                <td>${vendedor.cedula_ruc || 'N/A'}</td>
+                <td>${vendedor.telefono || 'N/A'}</td>
+                <td>${vendedor.correo || 'N/A'}</td>
+                <td>
+                    <span class="badge badge-${vendedor.sucursal.toLowerCase()}">
+                        ${vendedor.sucursal}
+                    </span>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    contenedor.innerHTML = html;
 }
 
-function actualizarListaOfertas(){
-    const contenedor = document.getElementById('listaOfertas'); 
+function actualizarListaOfertas() {
+    const contenedor = document.getElementById('listaOfertas');
     if (!contenedor) return;
 
-    if(datos.ofertas.length==0){
+    if (!datos.ofertas || datos.ofertas.length === 0) {
         contenedor.innerHTML = `
-        <div class="empty-state">
-            <p>📄</p>
-            <p>No hay ofertas Registradas</p>
-        </div>
+            <div class="empty-state">
+                <p>📄</p>
+                <p>No hay ofertas registradas</p>
+            </div>
         `;
         return;
     }
-    
+
+    let html = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>N° Oferta</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Cliente</th>
+                    <th>Vendedor</th>
+                    <th>Sucursal</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    datos.ofertas.forEach(oferta => {
+        const estadoBadge = oferta.estado === 'Aprobada'
+            ? '<span class="badge badge-success">Aprobada</span>'
+            : '<span class="badge badge-warning">Pendiente</span>';
+
+        html += `
+            <tr>
+                <td>${oferta.oferta_id}</td>
+                <td>${oferta.numero_oferta}</td>
+                <td>${oferta.fecha ? new Date(oferta.fecha).toLocaleDateString() : 'N/A'}</td>
+                <td>${estadoBadge}</td>
+                <td>${oferta.cliente_nombre || 'N/A'}</td>
+                <td>${oferta.vendedor_nombre || 'N/A'}</td>
+                <td>
+                    <span class="badge badge-${oferta.sucursal.toLowerCase()}">
+                        ${oferta.sucursal}
+                    </span>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    contenedor.innerHTML = html;
 }
 
-function actualizarListaTecnicos(){
-    const contenedor = document.getElementById('listaTecnicos'); 
+
+function actualizarListaTecnicos() {
+    const contenedor = document.getElementById('listaTecnicos');
     if (!contenedor) return;
 
-    if(datos.ofertas.length==0){
+    if (!datos.tecnicos || datos.tecnicos.length === 0) {
         contenedor.innerHTML = `
-        <div class="empty-state">
-            <p>👥</p>
-            <p>No hay tecnicos Registrados</p>
-        </div>
+            <div class="empty-state">
+                <p>👥</p>
+                <p>No hay técnicos registrados</p>
+            </div>
         `;
         return;
     }
-    
+
+    let html = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Especialidad</th>
+                    <th>Sucursal</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    datos.tecnicos.forEach(tecnico => {
+        html += `
+            <tr>
+                <td>${tecnico.tecnico_id}</td>
+                <td>${tecnico.nombre}</td>
+                <td>${tecnico.especialidad || 'N/A'}</td>
+                <td>
+                    <span class="badge badge-${tecnico.sucursal.toLowerCase()}">
+                        ${tecnico.sucursal}
+                    </span>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    contenedor.innerHTML = html;
 }
+
+
+
 
 // ============================================
 // CARGAR SELECT DE ÁREAS TÉCNICAS

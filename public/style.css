@@ -30,11 +30,14 @@
         header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
         }
 
-        .header-content {
+        .header-top {
+            padding: 16px 0;
+        }
+
+        .header-top-inner {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -43,11 +46,21 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
 
-        .logo-icon {
-            font-size: 2.2rem;
+        .logo-icon-box {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
         .logo-text {
@@ -57,74 +70,98 @@
         }
 
         .logo-title {
-            font-size: 2rem;
+            font-size: 1.6rem;
             font-weight: 800;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.05em;
         }
 
         .logo-subtitle {
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             color: var(--light);
-            opacity: 0.9;
+            opacity: 0.85;
             margin-top: 2px;
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info-text {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .btn-logout {
+            padding: 7px 18px;
+            background: rgba(231, 76, 60, 0.85);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #e74c3c;
+        }
+
+        /* ---- Navigation bar ---- */
+        .nav-bar {
+            background: rgba(0, 0, 0, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
         .nav-tabs {
             display: flex;
-            background: rgba(255, 255, 255, 0.12);
-            border-radius: 999px;
-            padding: 4px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            gap: 4px;
+            padding: 8px 0;
+            flex-wrap: wrap;
         }
 
         .tab {
-            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
             cursor: pointer;
-            transition: all 0.25s;
-            font-weight: 600;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 0.88rem;
             white-space: nowrap;
-            border-radius: 999px;
-            background: #f0f4f8;
-            color: var(--primary);
+            border-radius: 8px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid transparent;
         }
 
-        /* Estado activo por módulo (colores contrastantes) */
-        .tab[data-tab="clientes"].active,
-        .tab[data-tab="clientes"]:hover {
-            background: #3498db;
-            color: #ffffff;
+        .tab-icon {
+            font-size: 1rem;
         }
 
-        .tab[data-tab="equipos"].active,
-        .tab[data-tab="equipos"]:hover {
-            background: #27ae60;
-            color: #ffffff;
-        }
-
-        .tab[data-tab="datos"].active,
-        .tab[data-tab="datos"]:hover {
-            background: #f39c12;
-            color: #ffffff;
-        }
-
-        .tab[data-tab="calibracion"].active,
-        .tab[data-tab="calibracion"]:hover {
-            background: #9b59b6;
-            color: #ffffff;
-        }
-
-        .tab[data-tab="certificados"].active,
-        .tab[data-tab="certificados"]:hover {
-            background: #e74c3c;
-            color: #ffffff;
-        }
-
-        /* Hover para cualquier pestaña inactiva (por si el mouse pasa rápido) */
         .tab:hover:not(.active) {
-            transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
         }
+
+        .tab.active {
+            background: #fff;
+            color: var(--primary);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Colored left border per module on active */
+        .tab[data-tab="clientes"].active { border-left: 3px solid #3498db; }
+        .tab[data-tab="vendedores"].active { border-left: 3px solid #1abc9c; }
+        .tab[data-tab="tecnicos"].active { border-left: 3px solid #e67e22; }
+        .tab[data-tab="equipos"].active { border-left: 3px solid #27ae60; }
+        .tab[data-tab="datos"].active { border-left: 3px solid #f39c12; }
+        .tab[data-tab="calibracion"].active { border-left: 3px solid #9b59b6; }
+        .tab[data-tab="certificados"].active { border-left: 3px solid #e74c3c; }
 
         .tab-content {
             display: none;
@@ -359,8 +396,10 @@
             text-align: center;
             margin-top: 40px;
             padding: 20px;
-            color: #777;
-            border-top: 1px solid #eee;
+            color: #999;
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.85rem;
+            letter-spacing: 0.02em;
         }
 
         @media (max-width: 768px) {
@@ -370,34 +409,66 @@
             }
 
             .nav-tabs {
-                flex-direction: column;
+                gap: 2px;
             }
 
-            .header-content {
+            .tab {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
+            .tab-label {
+                display: none;
+            }
+
+            .tab-icon {
+                font-size: 1.2rem;
+            }
+
+            .header-top-inner {
                 flex-direction: column;
-                gap: 15px;
+                gap: 12px;
+                text-align: center;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: center;
             }
         }
 /* Estilos para el modal */
 .modal {
-    display: none; /* Oculto por defecto */
-    position: fixed; /* Se queda en su lugar */
-    z-index: 1; /* Se sienta encima de todo */
+    display: none;
+    position: fixed;
+    z-index: 100;
     left: 0;
     top: 0;
-    width: 100%; /* Ancho completo */
-    height: 100%; /* Altura completa */
-    overflow: auto; /* Habilita el scroll si es necesario */
-    background-color: rgb(0,0,0); /* Color de fondo */
-    background-color: rgba(0,0,0,0.4); /* Negro con opacidad */
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
 }
 
 .modal-content {
-    background-color: #fefefe;
-    margin: 15% auto; /* 15% desde arriba y centrado */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Podrías ajustar esto */
+    background-color: #fff;
+    margin: 8% auto;
+    padding: 30px;
+    border: none;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 550px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
 }
 
 .close {
@@ -405,11 +476,12 @@
     float: right;
     font-size: 28px;
     font-weight: bold;
+    line-height: 1;
 }
 
 .close:hover,
 .close:focus {
-    color: black;
+    color: var(--danger);
     text-decoration: none;
     cursor: pointer;
 }

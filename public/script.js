@@ -266,6 +266,106 @@ document.getElementById('clienteForm').addEventListener('submit', async function
 });
 
 // ============================================
+// FORMULARIO DE VENDEDOR
+// ============================================
+
+document.getElementById('vendedorForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const nombre = document.getElementById('vendedorNombre').value.trim();
+    const cedula = document.getElementById('vendedorCedula').value.trim();
+    const telefono = document.getElementById('vendedorTelefono').value.trim();
+    const correo = document.getElementById('vendedorCorreo').value.trim();
+
+    // Validaciones
+    if (!nombre || !cedula || !correo) {
+        mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
+        return;
+    }
+
+    const vendedorData = {
+        nombre: nombre,
+        cedula_ruc: cedula,
+        telefono: telefono,
+        correo: correo,
+        sucursal: 'Quito' // O la sucursal actual
+    };
+
+    try {
+        const response = await fetch('/api/vendedores', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(vendedorData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            mostrarAlerta('Vendedor registrado exitosamente');
+            document.getElementById('vendedorForm').reset();
+            await cargarVendedores(); // Recargar lista
+        } else {
+            mostrarAlerta(result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al registrar vendedor', 'error');
+    }
+});
+
+// ============================================
+// FORMULARIO DE TÉCNICO
+// ============================================
+
+document.getElementById('tecnicoForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const nombre = document.getElementById('tecnicoNombre').value.trim();
+    const cedula = document.getElementById('tecnicoCedula').value.trim();
+    const especialidad = document.getElementById('tecnicoEspecialidad').value.trim();
+    const sucursal = document.getElementById('tecnicoSucursal').value.trim();
+
+    // Validaciones
+    if (!nombre || !cedula || !sucursal) {
+        mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
+        return;
+    }
+
+    const tecnicoData = {
+        nombre: nombre,
+        cedula: cedula,
+        especialidad: especialidad,
+        sucursal: sucursal
+    };
+
+    try {
+        const response = await fetch('/api/tecnicos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(tecnicoData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            mostrarAlerta('Técnico registrado exitosamente');
+            document.getElementById('tecnicoForm').reset();
+            await cargarTecnicos(); // Recargar lista
+        } else {
+            mostrarAlerta(result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al registrar técnico', 'error');
+    }
+});
+
+
+// ============================================
 // BÚSQUEDA DE CLIENTES (para formulario de equipos)
 // ============================================
 
@@ -1171,13 +1271,8 @@ function mostrarInfoUsuario() {
     const userInfoDiv = document.getElementById('userInfo');
     if (userInfoDiv) {
         userInfoDiv.innerHTML = `
-            <strong>👤 ${usuario.nombre}</strong> 
-            <span style="margin-left: 15px; color: #7f8c8d;">
-                Rol: ${usuario.role}
-            </span>
-            <span style="margin-left: 15px; color: #7f8c8d;">
-                Sucursal: ${usuario.sucursal}
-            </span>
+            <strong>${usuario.nombre}</strong>
+            <span style="margin-left: 10px; opacity: 0.75;">${usuario.role} &middot; ${usuario.sucursal}</span>
         `;
     }
 }

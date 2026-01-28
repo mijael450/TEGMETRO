@@ -10,36 +10,55 @@
 
 <body>
     <header>
-        <div class="user-info-bar" style="background: #98daeb; padding: 10px 0; border-bottom: 2px solid #bdc3c7;">
-    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-        <div id="userInfo" style="font-size: 14px; color: #2c3e50;">
-            <!-- Se llenarÃ¡ con JavaScript -->
-        </div>
-        <button onclick="cerrarSesion()" class="btn btn-danger" style="padding: 5px 15px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Cerrar Sesión
-        </button>
-    </div>
-</div>
-        <div class="container">
-            <div class="header-content">
+        <div class="header-top">
+            <div class="container header-top-inner">
                 <div class="logo">
-                    <span class="logo-icon"></span>
+                    <div class="logo-icon-box">T</div>
                     <div class="logo-text">
                         <h1 class="logo-title">TEGMETRO</h1>
                         <p class="logo-subtitle">Sistema de Calibraciones</p>
                     </div>
                 </div>
-
-                <div class="nav-tabs">
-                    <div class="tab active" data-tab="clientes">Registro de Clientes</div>
-                    <div class="tab" data-tab="equipos">Registro de Equipos</div>
-                    <div class="tab" data-tab="datos">Datos Guardados</div>
-                    <!-- Nuevos tabs Sprint 2 -->
-                    <div class="tab" data-tab="calibracion">Calibracion de Equipos</div>
-                    <div class="tab" data-tab="certificados">Certificados</div>
+                <div class="header-right">
+                    <div id="userInfo" class="user-info-text"></div>
+                    <button onclick="cerrarSesion()" class="btn-logout">Cerrar Sesion</button>
                 </div>
             </div>
         </div>
+        <nav class="nav-bar">
+            <div class="container">
+                <div class="nav-tabs">
+                    <div class="tab active" data-tab="clientes">
+                        <span class="tab-icon">&#128101;</span>
+                        <span class="tab-label">Clientes</span>
+                    </div>
+                    <div class="tab" data-tab="vendedores">
+                        <span class="tab-icon">&#128188;</span>
+                        <span class="tab-label">Vendedores</span>
+                    </div>
+                    <div class="tab" data-tab="tecnicos">
+                        <span class="tab-icon">&#128295;</span>
+                        <span class="tab-label">Tecnicos</span>
+                    </div>
+                    <div class="tab" data-tab="equipos">
+                        <span class="tab-icon">&#9881;</span>
+                        <span class="tab-label">Equipos</span>
+                    </div>
+                    <div class="tab" data-tab="datos">
+                        <span class="tab-icon">&#128202;</span>
+                        <span class="tab-label">Datos</span>
+                    </div>
+                    <div class="tab" data-tab="calibracion">
+                        <span class="tab-icon">&#128300;</span>
+                        <span class="tab-label">Calibracion</span>
+                    </div>
+                    <div class="tab" data-tab="certificados">
+                        <span class="tab-icon">&#128196;</span>
+                        <span class="tab-label">Certificados</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
     </header>
 
     <div class="container">
@@ -79,6 +98,66 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary">Registrar Cliente</button>
+            </form>
+        </div>
+
+        <!-- Pestaña de Registro de Vendedores -->
+        <div id="vendedores" class="tab-content">
+            <h2> Registrar Nuevo Vendedor</h2>
+            <form id="vendedorForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="vendedorNombre" class="required">Nombre</label>
+                        <input type="text" id="vendedorNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="vendedorCedula" class="required">Cédula / RUC</label>
+                        <input type="text" id="vendedorCedula" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="vendedorTelefono">Teléfono</label>
+                        <input type="text" id="vendedorTelefono">
+                    </div>
+                    <div class="form-group">
+                        <label for="vendedorCorreo" class="required">Email</label>
+                        <input type="email" id="vendedorCorreo" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Registrar Vendedor</button>
+            </form>
+        </div>
+
+        <!-- Pestaña de Registro de Técnicos -->
+        <div id="tecnicos" class="tab-content">
+            <h2> Registrar Nuevo Técnico</h2>
+            <form id="tecnicoForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tecnicoNombre" class="required">Nombre</label>
+                        <input type="text" id="tecnicoNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tecnicoCedula" class="required">Cédula</label>
+                        <input type="text" id="tecnicoCedula" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tecnicoEspecialidad">Especialidad</label>
+                        <input type="text" id="tecnicoEspecialidad">
+                    </div>
+                    <div class="form-group">
+                        <label for="tecnicoSucursal" class="required">Sucursal</label>
+                        <input type="text" id="tecnicoSucursal" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Registrar Técnico</button>
             </form>
         </div>
 
@@ -302,11 +381,9 @@
 
     <footer>
         <div class="container">
-            <p>Sistema de Calibraciones </p>
+            <p>TEGMETRO &mdash; Sistema de Calibraciones</p>
         </div>
     </footer>
-
-    <script src="script.js"></script>
 
     <!-- Modal para editar cliente -->
     <div id="editClientModal" class="modal">
@@ -371,6 +448,8 @@
             </form>
         </div>
     </div>
+
+    <script src="script.js"></script>
 </body>
 
 </html>

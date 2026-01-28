@@ -222,6 +222,60 @@ app.get('/api/clientes', async (req, res) => {
     }
 });
 
+app.get('/api/clientes/buscar/:term', async (req, res) => {
+    try {
+        const { term } = req.params;
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('term', sql.VarChar, `%${term}%`)
+            .query(`
+                SELECT
+                    cliente_id,
+                    nombre,
+                    cedula_ruc,
+                    telefono,
+                    direccion,
+                    correo,
+                    sucursal
+                FROM Cliente_Quito
+                WHERE nombre LIKE @term OR cedula_ruc LIKE @term
+                ORDER BY cliente_id
+            `);
+
+        res.json({
+            success: true,
+            data: result.recordset
+        });
+    } catch (error) {
+        console.error('Error al buscar cliente:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+app.post('/api/clientes', async (req, res) => {
+    try {
+        const { nombre, cedula_ruc, direccion, telefono, correo, sucursal } = req.body;
+
+        const pool = await getConnection();
+        await pool.request()
+            .input('nombre', sql.VarChar, nombre)
+            .input('cedula_ruc', sql.VarChar, cedula_ruc)
+            .input('direccion', sql.VarChar, direccion)
+            .input('telefono', sql.VarChar, telefono)
+            .input('correo', sql.VarChar, correo)
+            .input('sucursal', sql.VarChar, sucursal)
+            .query('INSERT INTO Cliente_Quito (nombre, cedula_ruc, direccion, telefono, correo, sucursal) VALUES (@nombre, @cedula_ruc, @direccion, @telefono, @correo, @sucursal)');
+
+        res.json({ success: true, message: 'Cliente registrado exitosamente' });
+    } catch (error) {
+        console.error('Error al registrar cliente:', error);
+        res.status(500).json({ success: false, error: 'Error al registrar cliente' });
+    }
+});
+
 app.put('/api/clientes/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -344,6 +398,47 @@ app.get('/api/equipos', async (req, res) => {
             success: false,
             error: error.message
         });
+    }
+});
+
+app.post('/api/equipos', async (req, res) => {
+    try {
+        const { nombre, codigo_interno, marca, modelo, serie, area_id, cliente_id } = req.body;
+
+        const pool = await getConnection();
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            const resultVentas = await transaction.request()
+                .input('nombre', sql.VarChar, nombre)
+                .input('codigo_interno', sql.VarChar, codigo_interno)
+                .input('sucursal', sql.VarChar, 'Quito')
+                .output('equipo_id', sql.Int)
+                .query('INSERT INTO EquipoCliente_ventas_Quito (nombre, codigo_interno, sucursal) VALUES (@nombre, @codigo_interno, @sucursal); SELECT SCOPE_IDENTITY() AS equipo_id');
+            
+            const equipo_id = resultVentas.output.equipo_id;
+
+            await transaction.request()
+                .input('equipo_id', sql.Int, equipo_id)
+                .input('marca', sql.VarChar, marca)
+                .input('modelo', sql.VarChar, modelo)
+                .input('serie', sql.VarChar, serie)
+                .input('area_id', sql.Int, area_id)
+                .input('cliente_id', sql.Int, cliente_id)
+                .input('sucursal', sql.VarChar, 'Quito')
+                .query('INSERT INTO EquipoCliente_tecnico_Quito (equipo_id, marca, modelo, serie, area_id, cliente_id, sucursal) VALUES (@equipo_id, @marca, @modelo, @serie, @area_id, @cliente_id, @sucursal)');
+
+            await transaction.commit();
+            res.json({ success: true, message: 'Equipo registrado exitosamente' });
+        } catch (error) {
+            await transaction.rollback();
+            console.error('Error al registrar equipo:', error);
+            res.status(500).json({ success: false, error: 'Error al registrar equipo' });
+        }
+    } catch (error) {
+        console.error('Error al registrar equipo:', error);
+        res.status(500).json({ success: false, error: 'Error al registrar equipo' });
     }
 });
 
@@ -551,6 +646,26 @@ app.get('/api/vendedores', async (req, res) => {
     }
 });
 
+app.post('/api/vendedores', async (req, res) => {
+    try {
+        const { nombre, cedula_ruc, telefono, correo, sucursal } = req.body;
+
+        const pool = await getConnection();
+        await pool.request()
+            .input('nombre', sql.VarChar, nombre)
+            .input('cedula_ruc', sql.VarChar, cedula_ruc)
+            .input('telefono', sql.VarChar, telefono)
+            .input('correo', sql.VarChar, correo)
+            .input('sucursal', sql.VarChar, sucursal)
+            .query('INSERT INTO Vendedor_Quito (nombre, cedula_ruc, telefono, correo, sucursal) VALUES (@nombre, @cedula_ruc, @telefono, @correo, @sucursal)');
+
+        res.json({ success: true, message: 'Vendedor registrado exitosamente' });
+    } catch (error) {
+        console.error('Error al registrar vendedor:', error);
+        res.status(500).json({ success: false, error: 'Error al registrar vendedor' });
+    }
+});
+
 // ============================================
 // API PARA OFERTAS
 // ============================================
@@ -678,9 +793,24 @@ app.get('/api/tecnicos', async (req, res) => {
     }
 });
 
+app.post('/api/tecnicos', async (req, res) => {
+    try {
+        const { nombre, cedula, especialidad, sucursal } = req.body;
 
+        const pool = await getConnection();
+        await pool.request()
+            .input('nombre', sql.VarChar, nombre)
+            .input('cedula', sql.VarChar, cedula)
+            .input('especialidad', sql.VarChar, especialidad)
+            .input('sucursal', sql.VarChar, sucursal)
+            .query('INSERT INTO Tecnico_Quito (nombre, cedula, especialidad, sucursal) VALUES (@nombre, @cedula, @especialidad, @sucursal)');
 
-
+        res.json({ success: true, message: 'Técnico registrado exitosamente' });
+    } catch (error) {
+        console.error('Error al registrar técnico:', error);
+        res.status(500).json({ success: false, error: 'Error al registrar técnico' });
+    }
+});
 
 
 

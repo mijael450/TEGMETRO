@@ -33,10 +33,9 @@
                 <div class="nav-tabs">
                     <div class="tab active" data-tab="clientes">Registro de Clientes</div>
                     <div class="tab" data-tab="equipos">Registro de Equipos</div>
+                    <div class="tab" data-tab="vendedores">Registro de Vendedores</div>
+                    <div class="tab" data-tab="tecnicos">Registro de Técnicos</div>
                     <div class="tab" data-tab="datos">Datos Guardados</div>
-                    <!-- Nuevos tabs Sprint 2 -->
-                    <div class="tab" data-tab="calibracion">Calibracion de Equipos</div>
-                    <div class="tab" data-tab="certificados">Certificados</div>
                 </div>
             </div>
         </div>
@@ -164,6 +163,70 @@
             </form>
         </div>
 
+        <!-- PestaÃ±a de Registro de Vendedores -->
+        <div id="vendedores" class="tab-content">
+            <h2>Registrar Nuevo Vendedor</h2>
+            <form id="vendedorForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="vendedorNombre" class="required">Nombre Completo</label>
+                        <input type="text" id="vendedorNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="vendedorCedula" class="required">Cédula / RUC</label>
+                        <input type="text" id="vendedorCedula" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="vendedorTelefono" class="required">Teléfono</label>
+                        <input type="text" id="vendedorTelefono" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="vendedorEmail" class="required">Email</label>
+                        <input type="email" id="vendedorEmail" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Registrar Vendedor</button>
+            </form>
+        </div>
+
+        <!-- PestaÃ±a de Registro de Técnicos -->
+        <div id="tecnicos" class="tab-content">
+            <h2>Registrar Nuevo Técnico</h2>
+            <form id="tecnicoForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tecnicoNombre" class="required">Nombre Completo</label>
+                        <input type="text" id="tecnicoNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tecnicoCedula" class="required">Cédula</label>
+                        <input type="text" id="tecnicoCedula" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tecnicoArea" class="required">Área Técnica / Especialidad</label>
+                        <select id="tecnicoArea" required>
+                            <option value="">Seleccionar área...</option>
+                            <option value="1">Electricidad</option>
+                            <option value="2">Electrónica</option>
+                            <option value="3">Metrología</option>
+                            <option value="4">Temperatura</option>
+                            <option value="5">Presión</option>
+                            <option value="6">Otra</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Registrar Técnico</button>
+            </form>
+        </div>
+
         <!-- Pestaña de Datos Guardados -->
         <div id="datos" class="tab-content">
             <h2>Datos Guardados en el Sistema </h2>
@@ -207,11 +270,11 @@
             
         </div>
 
-        <!-- Pestaña Sprint 2: Calibración -->
+        <!-- PestaÃ±a Sprint 2: CalibraciÃ³n -->
         <div id="calibracion" class="tab-content">
             <h2> Calibracion de Equipos Pendientes</h2>
             <p class="muted-text">
-                Aquí el técnico selecciona un equipo pendiente, registra las condiciones ambientales,
+                Aquí­ el tecnico selecciona un equipo pendiente, registra las condiciones ambientales,
                 resultados y manejo de no conformidades. (El login de tecnico se integra aparte).
             </p>
 
@@ -254,7 +317,7 @@
                         <div class="form-group">
                             <label for="detalleResultados" class="required">Detalle de resultados</label>
                             <textarea id="detalleResultados" rows="3" required
-                                placeholder="Resumen de mediciones, incertidumbre, observaciones técnicas..."></textarea>
+                                placeholder="Resumen de mediciones, incertidumbre, observaciones tÃ©cnicas..."></textarea>
                         </div>
                     </div>
 
@@ -264,9 +327,9 @@
                             <label for="accionNoConformidad">Accion tomada</label>
                             <select id="accionNoConformidad" disabled>
                                 <option value="">Seleccionar...</option>
-                                                    <option value="Reparación">Reparación</option>
+                                <option value="ReparaciÃ³n">Reparación</option>
                                 <option value="Ajuste">Ajuste</option>
-                                <option value="Sin acción">Sin acción (solo registro)</option>
+                                <option value="Sin acciÃ³n">Sin acción (solo registro)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -275,7 +338,7 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Guardar Calibración</button>
+                    <button type="submit" class="btn btn-primary">Guardar CalibraciÃ³n</button>
                     <button type="button" id="btnGenerarCertificado" class="btn btn-success"
                         style="margin-left:10px; display:none;">
                         Generar Certificado
@@ -283,13 +346,13 @@
                 </form>
 
                 <p class="muted-text" style="margin-top:10px;">
-                    Nota: para integrar el login de técnico, se puede usar una variable global
+                    Nota: para integrar el login de tÃ©cnico, se puede usar una variable global
                     <code>window.tecnicoActual</code> para insertar su nombre en el certificado.
                 </p>
             </div>
         </div>
 
-        <!-- Pestaña Sprint 2: Certificados -->
+        <!-- PestaÃ±a Sprint 2: Certificados -->
         <div id="certificados" class="tab-content">
             <h2> Certificados de Calibracion</h2>
             <p class="muted-text">

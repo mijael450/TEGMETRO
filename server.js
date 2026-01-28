@@ -678,6 +678,48 @@ app.get('/api/tecnicos', async (req, res) => {
     }
 });
 
+// POST - Crear nuevo técnico
+app.post('/api/tecnicos', async (req, res) => {
+    try {
+        const { nombre, cedula, area_id, sucursal } = req.body;
+
+        // Validaciones
+        if (!nombre || !cedula) {
+            return res.status(400).json({
+                success: false,
+                error: 'Faltan campos obligatorios'
+            });
+        }
+
+        const pool = await getConnection();
+
+        // Insertar en Tecnico_Quito
+        const insertQuery = `
+            INSERT INTO Tecnico_Quito (nombre, cedula, area_id, sucursal)
+            VALUES (@nombre, @cedula, @area_id, @sucursal)
+        `;
+
+        await pool.request()
+            .input('nombre', sql.VarChar(100), nombre)
+            .input('cedula', sql.VarChar(20), cedula)
+            .input('area_id', sql.Int, area_id || 1)
+            .input('sucursal', sql.VarChar(50), sucursal || 'Quito')
+            .query(insertQuery);
+
+        res.json({
+            success: true,
+            message: 'Técnico registrado exitosamente'
+        });
+
+    } catch (error) {
+        console.error('Error al crear técnico:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 
 
 

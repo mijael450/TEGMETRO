@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Calibraciones</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <div class="user-info-bar" style="background: #98daeb; padding: 10px 0; border-bottom: 2px solid #bdc3c7;">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+        <div id="userInfo" style="font-size: 14px; color: #2c3e50;">
+            <!-- Se llenará con JavaScript -->
+        </div>
+        <button onclick="cerrarSesion()" class="btn btn-danger" style="padding: 5px 15px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Cerrar Sesión
+        </button>
+    </div>
+</div>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">🔧</span>
+                    <div class="logo-text">
+                        <h1 class="logo-title">TEGMETRO</h1>
+                        <p class="logo-subtitle">Sistema de Calibraciones</p>
+                    </div>
+                </div>
+
+                <div class="nav-tabs">
+                    <div class="tab active" data-tab="clientes">Registro de Clientes</div>
+                    <div class="tab" data-tab="equipos">Registro de Equipos</div>
+                    <div class="tab" data-tab="datos">Datos Guardados</div>
+                    <!-- Nuevos tabs Sprint 2 -->
+                    <div class="tab" data-tab="calibracion">Calibración de Equipos</div>
+                    <div class="tab" data-tab="certificados">Certificados</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Mensajes de alerta -->
+        <div id="alertSuccess" class="alert alert-success"></div>
+        <div id="alertError" class="alert alert-error"></div>
+
+        <!-- Pestaña de Registro de Clientes -->
+        <div id="clientes" class="tab-content active">
+            <h2>📝 Registrar Nuevo Cliente</h2>
+            <form id="clienteForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="razonSocial" class="required">Razón Social / Nombre</label>
+                        <input type="text" id="razonSocial" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="rucId" class="required">RUC / Identificación Única</label>
+                        <input type="text" id="rucId" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="direccionFiscal">Dirección Fiscal</label>
+                        <input type="text" id="direccionFiscal">
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono" class="required">Teléfono de Contacto</label>
+                        <input type="text" id="telefono" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="required">Email Corporativo</label>
+                    <input type="email" id="email" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Registrar Cliente</button>
+            </form>
+        </div>
+
+        <!-- Pestaña de Registro de Equipos -->
+        <div id="equipos" class="tab-content">
+            <h2>⚙️ Registrar Equipo para Calibración</h2>
+
+            <div class="client-selector">
+                <label for="buscarCliente" class="required">Buscar Cliente</label>
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="buscarCliente" placeholder="Buscar por nombre, RUC o código...">
+                </div>
+                <div id="resultadosClientes"></div>
+                <div id="clienteSeleccionado" class="client-info" style="display: none;"></div>
+            </div>
+
+            <form id="equipoForm">
+                <input type="hidden" id="clienteId">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tipoEquipo" class="required">Tipo de Equipo</label>
+                        <select id="tipoEquipo" required>
+                            <option value="">Seleccionar tipo...</option>
+                            <option value="Multímetro">Multímetro</option>
+                            <option value="Osciloscopio">Osciloscopio</option>
+                            <option value="Generador de Señales">Generador de Señales</option>
+                            <option value="Analizador de Espectro">Analizador de Espectro</option>
+                            <option value="Fuente de Alimentación">Fuente de Alimentación</option>
+                            <option value="Calibrador de Temperatura">Calibrador de Temperatura</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="modelo" class="required">Modelo</label>
+                        <input type="text" id="modelo" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="numeroSerie" class="required">Número de Serie</label>
+                        <input type="text" id="numeroSerie" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="codigoInterno">Código Interno</label>
+                        <input type="text" id="codigoInterno">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="marca" class="required">Marca / Fabricante</label>
+                        <input type="text" id="marca" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipoCalibracion" class="required">Tipo de Calibración</label>
+                        <select id="tipoCalibracion" required>
+                            <option value="">Seleccionar tipo...</option>
+                            <option value="SAE">SAE</option>
+                            <option value="A2LA">A2LA</option>
+                            <option value="Verificación">Verificación (Sin acreditación)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prioridad" class="required">Prioridad</label>
+                        <select id="prioridad" required>
+                            <option value="Normal">Normal (5 días hábiles)</option>
+                            <option value="Urgente">Urgente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="observaciones">Observaciones del Equipo</label>
+                        <textarea id="observaciones" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Registrar Equipo</button>
+            </form>
+        </div>
+
+        <!-- Pestaña de Datos Guardados -->
+        <div id="datos" class="tab-content">
+            <h2>📊 Datos Guardados en el Sistema</h2>
+
+            <div class="form-row">
+                <button id="exportarDatos" class="btn btn-success">Exportar Datos a JSON</button>
+                <button id="importarDatos" class="btn btn-primary">Importar Datos desde JSON</button>
+                <button id="limpiarDatos" class="btn btn-danger">Limpiar Todos los Datos</button>
+            </div>
+
+            <div class="listas">
+                <h3 style="margin-top: 30px;">Clientes Registrados</h3>
+            <div id="listaClientes"></div>
+            </div>
+
+            <div class="listas">
+                <h3 style="margin-top: 30px;">Equipos Registrados</h3>
+                <div id="listaEquipos"></div>
+            </div>
+
+            <div class="listas">
+                <h3 style="margin-top: 30px;">Calibraciones</h3>
+                <div id="listaCalibraciones"></div>
+            </div>
+
+            <div class="listas">
+                <h3 style="margin-top: 30px;">Vendedores</h3>
+                <div id="listaVendedores"></div>
+            </div>
+            
+            <div class="listas">
+                <h3 style="margin-top: 30px;">Ofertas</h3>
+                <div id="listaOfertas"></div>
+            </div>
+
+            <div class="listas">
+                <h3 style="margin-top: 30px;">Tecnicos</h3>
+                <div id="listaTecnicos"></div>
+            </div>
+            
+            
+        </div>
+
+        <!-- Pestaña Sprint 2: Calibración -->
+        <div id="calibracion" class="tab-content">
+            <h2>🧪 Calibración de Equipos Pendientes</h2>
+            <p class="muted-text">
+                Aquí el técnico selecciona un equipo pendiente, registra las condiciones ambientales,
+                resultados y manejo de no conformidades. (El login de técnico se integra aparte).
+            </p>
+
+            <h3 style="margin-top:20px;">Equipos pendientes de calibración</h3>
+            <div id="listaPendientes"></div>
+
+            <div id="panelCalibracion" style="display:none; margin-top:30px;">
+                <h3>Registrar Calibración</h3>
+                <div id="infoEquipoSeleccionado" class="client-info" style="margin-bottom:20px;"></div>
+
+                <form id="calibracionForm">
+                    <input type="hidden" id="equipoIdCalibrar">
+
+                    <h4>Condiciones ambientales</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="temperatura" class="required">Temperatura (°C)</label>
+                            <input type="number" step="0.1" id="temperatura" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="humedad" class="required">Humedad relativa (%)</label>
+                            <input type="number" step="0.1" id="humedad" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="presion">Presión atmosférica (hPa)</label>
+                            <input type="number" step="0.1" id="presion">
+                        </div>
+                    </div>
+
+                    <h4>Resultados de la calibración</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="resultadoGeneral" class="required">Resultado general</label>
+                            <select id="resultadoGeneral" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="Conforme">Conforme</option>
+                                <option value="No conforme">No conforme</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="detalleResultados" class="required">Detalle de resultados</label>
+                            <textarea id="detalleResultados" rows="3" required
+                                placeholder="Resumen de mediciones, incertidumbre, observaciones técnicas..."></textarea>
+                        </div>
+                    </div>
+
+                    <h4>No conformidades (solo si aplica)</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="accionNoConformidad">Acción tomada</label>
+                            <select id="accionNoConformidad" disabled>
+                                <option value="">Seleccionar...</option>
+                                <option value="Reparación">Reparación</option>
+                                <option value="Ajuste">Ajuste</option>
+                                <option value="Sin acción">Sin acción (solo registro)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="comentariosNoConformidad">Comentarios / detalle de la no conformidad</label>
+                            <textarea id="comentariosNoConformidad" rows="3" disabled></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Guardar Calibración</button>
+                    <button type="button" id="btnGenerarCertificado" class="btn btn-success"
+                        style="margin-left:10px; display:none;">
+                        Generar Certificado
+                    </button>
+                </form>
+
+                <p class="muted-text" style="margin-top:10px;">
+                    Nota: para integrar el login de técnico, se puede usar una variable global
+                    <code>window.tecnicoActual</code> para insertar su nombre en el certificado.
+                </p>
+            </div>
+        </div>
+
+        <!-- Pestaña Sprint 2: Certificados -->
+        <div id="certificados" class="tab-content">
+            <h2>📄 Certificados de Calibración</h2>
+            <p class="muted-text">
+                Aquí se listan los certificados generados. Al generarlos se abre una ventana imprimible,
+                que puede guardarse como PDF desde el navegador.
+            </p>
+            <div id="listaCertificadosTab" style="margin-top:20px;"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>Sistema de Calibraciones </p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

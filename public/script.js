@@ -95,7 +95,7 @@ async function cargarEquipos() {
         if (result.success) {
             datos.equipos = result.data;
             actualizarListaEquipos();
-            console.log(`✅ Clientes cargados de ${datos.sucursal}:`, datos.equipos.length);
+            console.log(`✅ Equipos cargados de ${datos.sucursal}:`, datos.equipos.length);
         }
     } catch (error) {
         console.error('Error al cargar equipos:', error);
@@ -120,12 +120,17 @@ async function cargarAreas() {
 // Cargar calibraciones
 async function cargarCalibraciones() {
     try {
-        const response = await fetch('/api/calibraciones');
+        if (!datos.sucursal) {
+            console.error('No hay sucursal seleccionada');
+            return;
+        }
+        const response = await fetch(`/api/calibraciones?sucursal=${datos.sucursal}`);
         const result = await response.json();
 
         if (result.success) {
             datos.calibraciones = result.data;
             actualizarListaCalibraciones();
+            console.log(`✅ Calibraciones cargados de ${datos.sucursal}:`, datos.calibraciones.length);
         }
     } catch (error) {
         console.error('Error al cargar calibraciones:', error);
@@ -135,12 +140,17 @@ async function cargarCalibraciones() {
 // Cargar vendedores
 async function cargarVendedores() {
     try {
-        const response = await fetch('/api/vendedores');
+        if (!datos.sucursal) {
+            console.error(`No hay sucursal seleccionada`);
+            return;
+        }
+        const response = await fetch(`/api/vendedores?sucursal=${datos.sucursal}`);
         const result = await response.json();
 
         if (result.success) {
             datos.vendedores = result.data;
             actualizarListaVendedores();
+            console.log(`✅ Vendedores cargados de ${datos.sucursal}:`, datos.vendedores.length);
         }
     } catch (error) {
         console.error('Error al cargar vendedores:', error);
@@ -150,12 +160,17 @@ async function cargarVendedores() {
 // Cargar ofertas
 async function cargarOfertas() {
     try {
-        const response = await fetch('/api/ofertas');
+        if (!datos.sucursal) {
+            console.error(`No hay sucursal seleccionada`);
+            return;
+        }
+        const response = await fetch(`/api/ofertas?sucursal=${datos.sucursal}`);
         const result = await response.json();
 
         if (result.success) {
             datos.ofertas = result.data;
             actualizarListaOfertas();
+            console.log(`✅ Ofertas cargadas de ${datos.sucursal}:`, datos.ofertas.length);
         }
     } catch (error) {
         console.error('Error al cargar vendedores:', error);
@@ -165,7 +180,11 @@ async function cargarOfertas() {
 // Cargar tecnicos
 async function cargarTecnicos() {
     try {
-        const response = await fetch('/api/tecnicos');
+        if (!datos.sucursal) {
+            console.error(`No hay sucursal seleccionada`);
+            return;
+        }
+        const response = await fetch(`/api/tecnicos?sucursal=${datos.sucursal}`);
         const result = await response.json();
 
         if (result.success) {
@@ -944,8 +963,6 @@ function actualizarListaTecnicos() {
     html += `</tbody></table>`;
     contenedor.innerHTML = html;
 }
-
-
 
 
 // ============================================

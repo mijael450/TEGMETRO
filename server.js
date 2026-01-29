@@ -436,7 +436,7 @@ app.get('/api/equipos', async (req, res) => {
         // Ejecutar con parámetros para evitar SQL injection
         const result = await pool.request()
             .input('sucursal', sql.VarChar(50), sucursal)
-            .query(local); // Cambia a 'distribuido' cuando uses ese modo
+            .query(distribuido); // Cambia a 'distribuido' cuando uses ese modo
 
         res.json({
             success: true,
@@ -599,82 +599,45 @@ app.delete('/api/equipos/:id', async (req, res) => {
 // API PARA CALIBRACIONES
 // ============================================
 app.get('/api/calibraciones', async (req, res) => {
+    try {
+        const { sucursal } = req.query;
 
-    const local = `
-        SELECT 
+        if (!sucursal) {
+            return res.status(400).json({
+                success: false,
+                error: 'Sucursal no especificada'
+            });
+        }
+
+        const pool = await getConnection();
+
+        // Query SIMPLE sin JOINs
+        const result = await pool.request()
+            .input('sucursal', sql.VarChar(50), sucursal)
+            .query(`
+                SELECT 
             c.calibracion_id,
             c.fecha_inicio,
             c.resultado,
             c.sucursal,
-
-            ev.nombre AS equipo_nombre,
-            cli.nombre AS cliente_nombre,
-            tec.nombre AS tecnico_nombre
-
-        FROM Calibracion_Coca c
-
-        INNER JOIN [dbo].[vw_EquipoCliente_ventas] ev
-            ON c.equipo_id = ev.equipo_id
-            AND c.sucursal = ev.sucursal
-
-        INNER JOIN [dbo].[vw_EquipoCliente_tecnico] et
-            ON c.equipo_id = et.equipo_id
-            AND c.sucursal = et.sucursal
-
-        INNER JOIN Tecnico_Coca tec
-            ON c.tecnico_id = tec.tecnico_id
-            AND c.sucursal = tec.sucursal
-
-        INNER JOIN Oferta_Coca o
-            ON c.oferta_id = o.oferta_id
-            AND c.sucursal = o.sucursal
-
-        INNER JOIN Cliente_Coca cli
-            ON o.cliente_id = cli.cliente_id
-            AND o.sucursal = cli.sucursal
-
-        WHERE c.sucursal = 'Coca'
-        ORDER BY c.calibracion_id
-    `;
-
-    const distribuido = `
-        SELECT 
-            c.calibracion_id,
-            c.fecha_inicio,
-            c.resultado,
-            c.sucursal,
-
             eq.nombre AS equipo_nombre,
             cli.nombre AS cliente_nombre,
             tec.nombre AS tecnico_nombre
-
         FROM vw_Calibracion c
-
-        INNER JOIN vw_EquipoCliente eq
+        LEFT JOIN vw_EquipoCliente eq
             ON c.equipo_id = eq.equipo_id
             AND c.sucursal = eq.sucursal
-
-        INNER JOIN vw_Tecnico tec
+        LEFT JOIN vw_Tecnico tec
             ON c.tecnico_id = tec.tecnico_id
             AND c.sucursal = tec.sucursal
-
-        INNER JOIN vw_Oferta o
+        LEFT JOIN vw_Oferta o
             ON c.oferta_id = o.oferta_id
             AND c.sucursal = o.sucursal
-
-        INNER JOIN vw_Cliente cli
+        LEFT JOIN vw_Cliente cli
             ON o.cliente_id = cli.cliente_id
             AND o.sucursal = cli.sucursal
-
-        WHERE c.sucursal = 'Quito'
-        ORDER BY c.calibracion_id
-    `;
-
-    try {
-        const pool = await getConnection();
-
-        // Modo práctica: consulta local
-        const result = await pool.request().query(local);
+        WHERE c.sucursal = @sucursal
+    `);
 
         res.json({
             success: true,
@@ -682,7 +645,7 @@ app.get('/api/calibraciones', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error al obtener calibraciones:', error);
+        console.error('Error al obtener calibraciones:', error.message);
         res.status(500).json({
             success: false,
             error: error.message
@@ -695,20 +658,31 @@ app.get('/api/calibraciones', async (req, res) => {
 // ============================================
 app.get('/api/vendedores', async (req, res) => {
     try {
+        const { sucursal } = req.query;
+
+        if (!sucursal) {
+            return res.status(400).json({
+                success: false,
+                error: 'Sucursal no especificada'
+            });
+        }
+
         const pool = await getConnection();
 
-        // Usar vista particionada para obtener todos los vendedores
-        const result = await pool.request().query(`
-            SELECT 
-                vendedor_id,
-                nombre,
-                cedula_ruc,
-                telefono,
-                correo,
-                sucursal
-            FROM vw_Vendedor
-            ORDER BY vendedor_id
-        `);
+        const result = await pool.request()
+            .input('sucursal', sql.VarChar(50), sucursal)
+            .query(`
+                SELECT 
+                    vendedor_id,
+                    nombre,
+                    cedula_ruc,
+                    telefono,
+                    correo,
+                    sucursal
+                FROM vw_Vendedor
+                WHERE sucursal = @sucursal
+                ORDER BY vendedor_id
+            `);
 
         res.json({
             success: true,
@@ -779,64 +753,73 @@ app.post('/api/vendedores', async (req, res) => {
 // API PARA OFERTAS
 // ============================================
 app.get('/api/ofertas', async (req, res) => {
-
-    const local = `
-        SELECT 
-            o.oferta_id,
-            o.numero_oferta,
-            o.fecha,
-            o.estado,
-            o.observaciones,
-            o.sucursal,
-
-            cli.nombre AS cliente_nombre,
-            ven.nombre AS vendedor_nombre
-
-        FROM Oferta_Coca o
-
-        INNER JOIN Cliente_Coca cli
-            ON o.cliente_id = cli.cliente_id
-            AND o.sucursal = cli.sucursal
-
-        INNER JOIN Vendedor_Coca ven
-            ON o.vendedor_id = ven.vendedor_id
-            AND o.sucursal = ven.sucursal
-
-        WHERE o.sucursal = 'Coca'
-        ORDER BY o.oferta_id
-    `;
-
-    const distribuido = `
-        SELECT 
-            o.oferta_id,
-            o.numero_oferta,
-            o.fecha,
-            o.estado,
-            o.observaciones,
-            o.sucursal,
-
-            cli.nombre AS cliente_nombre,
-            ven.nombre AS vendedor_nombre
-
-        FROM vw_Oferta o
-
-        INNER JOIN vw_Cliente cli
-            ON o.cliente_id = cli.cliente_id
-            AND o.sucursal = cli.sucursal
-
-        INNER JOIN vw_Vendedor ven
-            ON o.vendedor_id = ven.vendedor_id
-            AND o.sucursal = ven.sucursal
-
-        WHERE o.sucursal = 'Quito'
-        ORDER BY o.oferta_id
-    `;
-
     try {
+        const { sucursal } = req.query;
+
+        if (!sucursal) {
+            return res.status(400).json({
+                success: false,
+                error: 'Sucursal no especificada'
+            });
+        }
+
         const pool = await getConnection();
 
-        // Modo práctica: usa consulta local
-        const result = await pool.request().query(local);
+        const local = `
+            SELECT 
+                o.oferta_id,
+                o.numero_oferta,
+                o.fecha,
+                o.estado,
+                o.observaciones,
+                o.sucursal,
+
+                cli.nombre AS cliente_nombre,
+                ven.nombre AS vendedor_nombre
+
+            FROM Oferta_${sucursal} o
+
+            INNER JOIN Cliente_${sucursal} cli
+                ON o.cliente_id = cli.cliente_id
+                AND o.sucursal = cli.sucursal
+
+            INNER JOIN Vendedor_${sucursal} ven
+                ON o.vendedor_id = ven.vendedor_id
+                AND o.sucursal = ven.sucursal
+
+            WHERE o.sucursal = @sucursal
+            ORDER BY o.oferta_id
+        `;
+
+        const distribuido = `
+            SELECT 
+                o.oferta_id,
+                o.numero_oferta,
+                o.fecha,
+                o.estado,
+                o.observaciones,
+                o.sucursal,
+
+                cli.nombre AS cliente_nombre,
+                ven.nombre AS vendedor_nombre
+
+            FROM vw_Oferta o
+
+            INNER JOIN vw_Cliente cli
+                ON o.cliente_id = cli.cliente_id
+                AND o.sucursal = cli.sucursal
+
+            INNER JOIN vw_Vendedor ven
+                ON o.vendedor_id = ven.vendedor_id
+                AND o.sucursal = ven.sucursal
+
+            WHERE o.sucursal = @sucursal
+            ORDER BY o.oferta_id
+        `;
+
+        const result = await pool.request()
+            .input('sucursal', sql.VarChar(50), sucursal)
+            .query(distribuido); // Cambia a 'local' si necesitas
 
         res.json({
             success: true,
@@ -908,20 +891,31 @@ app.post('/api/ofertas', async (req, res) => {
 
 app.get('/api/tecnicos', async (req, res) => {
     try {
+        const { sucursal } = req.query;
+
+        if (!sucursal) {
+            return res.status(400).json({
+                success: false,
+                error: 'Sucursal no especificada'
+            });
+        }
+
         const pool = await getConnection();
         
-        // Usar vista particionada para obtener todos los técnicos
-        const result = await pool.request().query(`
-            SELECT 
-                t.tecnico_id,
-                t.nombre,
-                a.nombre AS especialidad,
-                t.sucursal
-            FROM vw_Tecnico t
-            LEFT JOIN AreaTecnica a
-                ON t.area_id = a.area_id
-            ORDER BY t.tecnico_id
-        `);
+        const result = await pool.request()
+            .input('sucursal', sql.VarChar(50), sucursal)
+            .query(`
+                SELECT 
+                    t.tecnico_id,
+                    t.nombre,
+                    a.nombre AS especialidad,
+                    t.sucursal
+                FROM vw_Tecnico t
+                LEFT JOIN AreaTecnica a
+                    ON t.area_id = a.area_id
+                WHERE t.sucursal = @sucursal
+                ORDER BY t.tecnico_id
+            `);
 
         res.json({
             success: true,

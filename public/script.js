@@ -40,12 +40,12 @@ async function cargarDatos() {
         await Promise.all([
             cargarClientes(),
             cargarEquipos(),
-            //cargarAreas(), Si es necesario se implementara luego
+            //
             cargarCalibraciones(),
             cargarVendedores(),
             cargarOfertas(),
-            cargarTecnicos()
-
+            cargarTecnicos(),
+            cargarAreas()
         ]);
         console.log('Datos cargados exitosamente desde BD distribuida');
     } catch (error) {
@@ -110,7 +110,10 @@ async function cargarAreas() {
 
         if (result.success) {
             datos.areas = result.data;
-            cargarSelectAreas();
+            cargarOpcionesAreas();
+            console.log(`✅ Áreas técnicas cargadas:`, datos.areas.length);
+        } else {
+            console.error('Error al cargar áreas:', result.error);
         }
     } catch (error) {
         console.error('Error al cargar áreas:', error);
@@ -378,6 +381,10 @@ window.seleccionarCliente = function (clienteId) {
 // Seleccionar cliente directamente desde los resultados de búsqueda
 window.seleccionarClienteDirecto = function (cliente) {
     document.getElementById('clienteId').value = cliente.cliente_id;
+        // AGREGAR: Guardar la sucursal del cliente también
+    document.getElementById('sucursalEquipo').value = cliente.sucursal;
+    document.getElementById('sucursalEquipo').disabled = true; // Bloquearlo para que no lo cambien
+    
     document.getElementById('clienteSeleccionado').innerHTML = `
         <p><strong>Cliente seleccionado:</strong> ${cliente.nombre} (ID: ${cliente.cliente_id})</p>
         <p>RUC/ID: ${cliente.cedula_ruc} | Sucursal: <span class="badge badge-${cliente.sucursal.toLowerCase()}">${cliente.sucursal}</span></p>
@@ -565,6 +572,23 @@ document.getElementById('tecnicoForm').addEventListener('submit', async function
         mostrarAlerta('Error al registrar técnico', 'error');
     }
 });
+
+//Funcion para llenar las areas correctas
+function cargarOpcionesAreas() {
+    const selectArea = document.getElementById('tecnicoArea');
+    if (!selectArea) return;
+
+    // Limpiar opciones existentes excepto la primera
+    selectArea.innerHTML = '<option value="">Seleccionar área...</option>';
+
+    // Agregar opciones desde la BD
+    datos.areas.forEach(area => {
+        const option = document.createElement('option');
+        option.value = area.area_id;
+        option.textContent = area.nombre;
+        selectArea.appendChild(option);
+    });
+}
 
 // ============================================
 // NAVEGACIÓN ENTRE PESTAÑAS

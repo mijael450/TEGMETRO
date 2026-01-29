@@ -983,9 +983,36 @@ app.post('/api/tecnicos', async (req, res) => {
 });
 
 
+// ============================================
+// API PARA AREAS
+// ============================================
 
 
+app.get('/api/areas', async (req, res) => {
+    try {
+        const pool = await getConnection();
+        
+        const result = await pool.request().query(`
+            SELECT 
+                area_id,
+                nombre
+            FROM AreaTecnica
+            ORDER BY nombre
+        `);
 
+        res.json({
+            success: true,
+            data: result.recordset
+        });
+
+    } catch (error) {
+        console.error('Error al obtener áreas técnicas:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
 
 
 // ============================================

@@ -9,10 +9,10 @@ let datos = {
     equipos: [],
     calibraciones: [],
     certificados: [],
-    areas: [], 
-    vendedores: [], 
-    ofertas:[], 
-    tecnicos:[]
+    areas: [],
+    vendedores: [],
+    ofertas: [],
+    tecnicos: []
 };
 
 // ============================================
@@ -26,8 +26,8 @@ async function cargarDatos() {
             cargarClientes(),
             cargarEquipos(),
             //cargarAreas(), Si es necesario se implementara luego
-            cargarCalibraciones(), 
-            cargarVendedores(), 
+            cargarCalibraciones(),
+            cargarVendedores(),
             cargarOfertas(),
             cargarTecnicos()
 
@@ -44,7 +44,7 @@ async function cargarClientes() {
     try {
         const response = await fetch('/api/clientes');
         const result = await response.json();
-        
+
         if (result.success) {
             datos.clientes = result.data;
             actualizarListaClientes();
@@ -59,7 +59,7 @@ async function cargarEquipos() {
     try {
         const response = await fetch('/api/equipos');
         const result = await response.json();
-        
+
         if (result.success) {
             datos.equipos = result.data;
             actualizarListaEquipos();
@@ -74,7 +74,7 @@ async function cargarAreas() {
     try {
         const response = await fetch('/api/areas');
         const result = await response.json();
-        
+
         if (result.success) {
             datos.areas = result.data;
             cargarSelectAreas();
@@ -89,7 +89,7 @@ async function cargarCalibraciones() {
     try {
         const response = await fetch('/api/calibraciones');
         const result = await response.json();
-        
+
         if (result.success) {
             datos.calibraciones = result.data;
             actualizarListaCalibraciones();
@@ -104,7 +104,7 @@ async function cargarVendedores() {
     try {
         const response = await fetch('/api/vendedores');
         const result = await response.json();
-        
+
         if (result.success) {
             datos.vendedores = result.data;
             actualizarListaVendedores();
@@ -119,10 +119,10 @@ async function cargarOfertas() {
     try {
         const response = await fetch('/api/ofertas');
         const result = await response.json();
-        
+
         if (result.success) {
             datos.ofertas = result.data;
-            actualizarListaOferta();
+            actualizarListaOfertas();
         }
     } catch (error) {
         console.error('Error al cargar vendedores:', error);
@@ -134,7 +134,7 @@ async function cargarTecnicos() {
     try {
         const response = await fetch('/api/tecnicos');
         const result = await response.json();
-        
+
         if (result.success) {
             datos.tecnicos = result.data;
             actualizarListaTecnicos();
@@ -186,14 +186,14 @@ function obtenerSiguienteIdEquipo() {
 
 // Validar RUC único
 function validarRUCUnico(ruc, idActual = null) {
-    return !datos.clientes.some(cliente => 
+    return !datos.clientes.some(cliente =>
         cliente.cedula_ruc === ruc && cliente.cliente_id !== idActual
     );
 }
 
 // Validar número de serie único
 function validarNumeroSerieUnico(numeroSerie, idActual = null) {
-    return !datos.equipos.some(equipo => 
+    return !datos.equipos.some(equipo =>
         equipo.serie === numeroSerie && equipo.equipo_id !== idActual
     );
 }
@@ -551,9 +551,9 @@ function actualizarListaDatos() {
     actualizarListaClientes();
     actualizarListaEquipos();
     actualizarListaCalibraciones();
-    actualizarListaVendedores(); 
-    actualizarListaOfertas(); 
-    actualizarListaTecnicos(); 
+    actualizarListaVendedores();
+    actualizarListaOfertas();
+    actualizarListaTecnicos();
 }
 
 function actualizarListaClientes() {
@@ -924,7 +924,7 @@ function cargarSelectAreas() {
     if (!select) return;
 
     select.innerHTML = '<option value="">Seleccionar área...</option>';
-    
+
     datos.areas.forEach(area => {
         const option = document.createElement('option');
         option.value = area.area_id;
@@ -991,7 +991,7 @@ function actualizarListaPendientes() {
 }
 
 // Función placeholder para iniciar calibración
-window.iniciarCalibracion = function(equipoId) {
+window.iniciarCalibracion = function (equipoId) {
     mostrarAlerta('Funcionalidad de calibración en desarrollo', 'error');
 };
 
@@ -1016,7 +1016,7 @@ function actualizarListaCertificadosTab() {
 // EXPORTAR/IMPORTAR/LIMPIAR DATOS
 // ============================================
 
-document.getElementById('exportarDatos')?.addEventListener('click', async function() {
+document.getElementById('exportarDatos')?.addEventListener('click', async function () {
     try {
         const dataToExport = {
             clientes: datos.clientes,
@@ -1040,7 +1040,7 @@ document.getElementById('exportarDatos')?.addEventListener('click', async functi
     }
 });
 
-document.getElementById('limpiarDatos')?.addEventListener('click', function() {
+document.getElementById('limpiarDatos')?.addEventListener('click', function () {
     if (confirm('⚠️ ADVERTENCIA: Esto NO eliminará datos de la base de datos, solo limpiará la caché local. ¿Continuar?')) {
         datos = {
             clientes: [],
@@ -1103,53 +1103,57 @@ async function deleteClient(clientId) {
     }
 }
 
-document.getElementById('editClientForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
 
-    const clientId = document.getElementById('editClientId').value;
-    const razonSocial = document.getElementById('editRazonSocial').value.trim();
-    const rucId = document.getElementById('editRucId').value.trim();
-    const direccionFiscal = document.getElementById('editDireccionFiscal').value.trim();
-    const telefono = document.getElementById('editTelefono').value.trim();
-    const email = document.getElementById('editEmail').value.trim();
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('editClientForm')?.addEventListener('submit', async function (e) {
+        e.preventDefault();
 
-    // Validaciones
-    if (!razonSocial || !rucId || !telefono || !email) {
-        mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
-        return;
-    }
+        const clientId = document.getElementById('editClientId').value;
+        const razonSocial = document.getElementById('editRazonSocial').value.trim();
+        const rucId = document.getElementById('editRucId').value.trim();
+        const direccionFiscal = document.getElementById('editDireccionFiscal').value.trim();
+        const telefono = document.getElementById('editTelefono').value.trim();
+        const email = document.getElementById('editEmail').value.trim();
 
-    const clienteData = {
-        nombre: razonSocial,
-        cedula_ruc: rucId,
-        direccion: direccionFiscal,
-        telefono: telefono,
-        correo: email
-    };
-
-    try {
-        const response = await fetch(`/api/clientes/${clientId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(clienteData)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            mostrarAlerta('Cliente actualizado exitosamente');
-            closeEditClientModal();
-            await cargarClientes(); // Recargar lista
-        } else {
-            mostrarAlerta(result.error, 'error');
+        // Validaciones
+        if (!razonSocial || !rucId || !telefono || !email) {
+            mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
+            return;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        mostrarAlerta('Error al actualizar cliente', 'error');
-    }
+
+        const clienteData = {
+            nombre: razonSocial,
+            cedula_ruc: rucId,
+            direccion: direccionFiscal,
+            telefono: telefono,
+            correo: email
+        };
+
+        try {
+            const response = await fetch(`/api/clientes/${clientId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(clienteData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                mostrarAlerta('Cliente actualizado exitosamente');
+                closeEditClientModal();
+                await cargarClientes(); // Recargar lista
+            } else {
+                mostrarAlerta(result.error, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarAlerta('Error al actualizar cliente', 'error');
+        }
+    });
 });
+
 // ============================================
 // FUNCIONES DE EDICIÓN Y ELIMINACIÓN DE EQUIPOS
 // ============================================
@@ -1199,53 +1203,57 @@ async function deleteEquipment(equipmentId) {
     }
 }
 
-document.getElementById('editEquipmentForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
 
-    const equipmentId = document.getElementById('editEquipmentId').value;
-    const tipoEquipo = document.getElementById('editTipoEquipo').value.trim();
-    const modelo = document.getElementById('editModelo').value.trim();
-    const numeroSerie = document.getElementById('editNumeroSerie').value.trim();
-    const codigoInterno = document.getElementById('editCodigoInterno').value.trim();
-    const marca = document.getElementById('editMarca').value.trim();
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('editEquipmentForm')?.addEventListener('submit', async function (e) {
+        e.preventDefault();
 
-    // Validaciones
-    if (!tipoEquipo || !modelo || !numeroSerie || !marca) {
-        mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
-        return;
-    }
+        const equipmentId = document.getElementById('editEquipmentId').value;
+        const tipoEquipo = document.getElementById('editTipoEquipo').value.trim();
+        const modelo = document.getElementById('editModelo').value.trim();
+        const numeroSerie = document.getElementById('editNumeroSerie').value.trim();
+        const codigoInterno = document.getElementById('editCodigoInterno').value.trim();
+        const marca = document.getElementById('editMarca').value.trim();
 
-    const equipmentData = {
-        nombre: tipoEquipo,
-        modelo: modelo,
-        serie: numeroSerie,
-        codigo_interno: codigoInterno,
-        marca: marca
-    };
-
-    try {
-        const response = await fetch(`/api/equipos/${equipmentId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(equipmentData)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            mostrarAlerta('Equipo actualizado exitosamente');
-            closeEditEquipmentModal();
-            await cargarEquipos(); // Recargar lista
-        } else {
-            mostrarAlerta(result.error, 'error');
+        // Validaciones
+        if (!tipoEquipo || !modelo || !numeroSerie || !marca) {
+            mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
+            return;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        mostrarAlerta('Error al actualizar equipo', 'error');
-    }
+
+        const equipmentData = {
+            nombre: tipoEquipo,
+            modelo: modelo,
+            serie: numeroSerie,
+            codigo_interno: codigoInterno,
+            marca: marca
+        };
+
+        try {
+            const response = await fetch(`/api/equipos/${equipmentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(equipmentData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                mostrarAlerta('Equipo actualizado exitosamente');
+                closeEditEquipmentModal();
+                await cargarEquipos(); // Recargar lista
+            } else {
+                mostrarAlerta(result.error, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarAlerta('Error al actualizar equipo', 'error');
+        }
+    });
 });
+
 
 // ============================================
 // INICIALIZACIÓN
@@ -1255,9 +1263,9 @@ document.getElementById('editEquipmentForm').addEventListener('submit', async fu
 document.addEventListener('DOMContentLoaded', async function () {
     console.log('🚀 Sistema de Calibraciones - BD Distribuida Tegmetro');
     console.log('📊 Cargando datos desde SQL Server...');
-    
+
     await cargarDatos();
-    
+
     console.log('✅ Sistema inicializado correctamente');
     console.log('📍 Clientes:', datos.clientes.length);
     console.log('⚙️ Equipos:', datos.equipos.length);
@@ -1271,13 +1279,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 // Verificar sesión al cargar
 function verificarSesion() {
     const usuarioActual = sessionStorage.getItem('usuarioActual');
-    
+
     if (!usuarioActual) {
         // No hay sesión, redirigir al login
         window.location.href = 'login.html';
         return null;
     }
-    
+
     return JSON.parse(usuarioActual);
 }
 
@@ -1285,7 +1293,7 @@ function verificarSesion() {
 function mostrarInfoUsuario() {
     const usuario = verificarSesion();
     if (!usuario) return;
-    
+
     const userInfoDiv = document.getElementById('userInfo');
     if (userInfoDiv) {
         userInfoDiv.innerHTML = `
@@ -1315,13 +1323,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (usuario) {
         mostrarInfoUsuario();
     }
-    
+
     // Resto de tu código de inicialización...
     console.log('🚀 Sistema de Calibraciones - BD Distribuida Tegmetro');
     console.log('📊 Cargando datos desde SQL Server...');
-    
+
     await cargarDatos();
-    
+
     console.log('✅ Sistema inicializado correctamente');
     console.log('📍 Usuario:', usuario.nombre);
     console.log('📍 Clientes:', datos.clientes.length);

@@ -47,6 +47,15 @@
                     <input type="password" id="password" placeholder="Ingrese su contraseña" required>
                 </div>
 
+                <div class="form-group">
+                    <label for="sucursal">Sucursal</label>
+                    <select id="sucursal" required>
+                        <option value="">Seleccione una sucursal</option>
+                        <option value="Quito">Quito</option>
+                        <option value="Coca">Coca</option>
+                    </select>
+                </div>
+
                 <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
                 <button type="button" class="btn btn-outline" onclick="window.location.href='indexx.html'">Volver al Inicio</button>
             </form>
@@ -64,87 +73,89 @@
     </footer>
 
     <script>
-       // Función para mostrar alerta
-    function mostrarAlerta(mensaje, tipo = 'error') {
-        const alertError = document.getElementById('alertError');
-        alertError.textContent = mensaje;
-        alertError.style.display = 'block';
-        
-        if (tipo === 'success') {
-            alertError.style.background = '#d4edda';
-            alertError.style.color = '#155724';
-            alertError.style.border = '1px solid #c3e6cb';
-        } else {
-            alertError.style.background = '#f8d7da';
-            alertError.style.color = '#721c24';
-            alertError.style.border = '1px solid #f5c6cb';
-        }
-
-        setTimeout(() => {
-            alertError.style.display = 'none';
-        }, 5000);
-    }
-
-    // Manejo del formulario de login
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value.trim();
-
-        if (!username || !password) {
-            mostrarAlerta('Por favor, complete todos los campos.');
-            return;
-        }
-
-        // Deshabilitar botón mientras se valida
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Validando...';
-
-        try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                // Guardar información del usuario en sessionStorage
-                sessionStorage.setItem('usuarioActual', JSON.stringify(result.user));
-                
-                mostrarAlerta(`¡Bienvenido ${result.user.nombre}! Redirigiendo...`, 'success');
-                
-                // Redirigir al sistema principal
-                setTimeout(() => {
-                    window.location.href = 'indexx.html';
-                }, 1500);
+        // Función para mostrar alerta
+        function mostrarAlerta(mensaje, tipo = 'error') {
+            const alertError = document.getElementById('alertError');
+            alertError.textContent = mensaje;
+            alertError.style.display = 'block';
+            
+            if (tipo === 'success') {
+                alertError.style.background = '#d4edda';
+                alertError.style.color = '#155724';
+                alertError.style.border = '1px solid #c3e6cb';
             } else {
-                mostrarAlerta(result.error || 'Credenciales incorrectas');
+                alertError.style.background = '#f8d7da';
+                alertError.style.color = '#721c24';
+                alertError.style.border = '1px solid #f5c6cb';
+            }
+
+            setTimeout(() => {
+                alertError.style.display = 'none';
+            }, 5000);
+        }
+
+        // Manejo del formulario de login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const sucursal = document.getElementById('sucursal').value;
+
+            if (!username || !password || !sucursal) {
+                mostrarAlerta('Por favor, complete todos los campos.');
+                return;
+            }
+
+            // Deshabilitar botón mientras se valida
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Validando...';
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password, sucursal })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Guardar información del usuario en sessionStorage
+                    sessionStorage.setItem('usuarioActual', JSON.stringify(result.user));
+                    sessionStorage.setItem('sucursalActual', sucursal);
+                    
+                    mostrarAlerta(`¡Bienvenido ${result.user.nombre}! Redirigiendo a ${sucursal}...`, 'success');
+                    
+                    // Redirigir al sistema principal
+                    setTimeout(() => {
+                        window.location.href = 'indexx.html';
+                    }, 1500);
+                } else {
+                    mostrarAlerta(result.error || 'Credenciales incorrectas');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarAlerta('Error al conectar con el servidor');
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
             }
-        } catch (error) {
-            console.error('Error:', error);
-            mostrarAlerta('Error al conectar con el servidor');
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-        }
-    });
+        });
 
-    // Verificar si ya hay una sesión activa
-    document.addEventListener('DOMContentLoaded', function() {
-        const usuarioActual = sessionStorage.getItem('usuarioActual');
-        if (usuarioActual) {
-            // Si ya hay una sesión activa, redirigir directamente al sistema
-            window.location.href = 'indexx.html';
-        }
-    });
+        // Verificar si ya hay una sesión activa
+        document.addEventListener('DOMContentLoaded', function() {
+            const usuarioActual = sessionStorage.getItem('usuarioActual');
+            if (usuarioActual) {
+                // Si ya hay una sesión activa, redirigir directamente al sistema
+                window.location.href = 'indexx.html';
+            }
+        });
     </script>
 </body>
 

@@ -15,6 +15,21 @@ let datos = {
     tecnicos: []
 };
 
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar la sucursal desde sessionStorage
+    const sucursalGuardada = sessionStorage.getItem('sucursalActual');
+    if (sucursalGuardada) {
+        datos.sucursal = sucursalGuardada;
+        console.log('Sucursal activa:', datos.sucursal);
+    } else {
+        // Si no hay sucursal, redirigir al login
+        window.location.href = 'login.html';
+    }
+
+    // Resto del código de inicialización...
+    cargarDatos();
+});
+
 // ============================================
 // FUNCIONES DE CARGA DE DATOS
 // ============================================
@@ -40,29 +55,47 @@ async function cargarDatos() {
 }
 
 // Cargar clientes desde la BD
+// En script.js - cuando hagas fetch al servidor
 async function cargarClientes() {
     try {
-        const response = await fetch('/api/clientes');
-        const result = await response.json();
+        // Verificar que haya sucursal seleccionada
+        if (!datos.sucursal) {
+            console.error('No hay sucursal seleccionada');
+            return;
+        }
 
+        // Enviar sucursal como query parameter
+        const response = await fetch(`/api/clientes?sucursal=${datos.sucursal}`);
+        const result = await response.json();
+        
         if (result.success) {
             datos.clientes = result.data;
             actualizarListaClientes();
+            console.log(`✅ Clientes cargados de ${datos.sucursal}:`, datos.clientes.length);
+        } else {
+            console.error('Error al cargar clientes:', result.error);
+            mostrarAlerta('Error al cargar clientes', 'error');
         }
     } catch (error) {
         console.error('Error al cargar clientes:', error);
+        mostrarAlerta('Error al cargar clientes', 'error');
     }
 }
 
 // Cargar equipos desde la BD
 async function cargarEquipos() {
     try {
-        const response = await fetch('/api/equipos');
+        if (!datos.sucursal) {
+            console.error('No hay sucursal seleccionada');
+            return;
+        }
+        const response = await fetch(`/api/equipos?sucursal=${datos.sucursal}`);
         const result = await response.json();
 
         if (result.success) {
             datos.equipos = result.data;
             actualizarListaEquipos();
+            console.log(`✅ Clientes cargados de ${datos.sucursal}:`, datos.equipos.length);
         }
     } catch (error) {
         console.error('Error al cargar equipos:', error);
@@ -1302,7 +1335,7 @@ function mostrarInfoUsuario() {
                 Rol: ${usuario.role}
             </span>
             <span style="margin-left: 15px; color: #7f8c8d;">
-                Sucursal: ${usuario.sucursal}
+                Sucursal: ${datos.sucursal}
             </span>
         `;
     }

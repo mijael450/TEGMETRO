@@ -218,6 +218,22 @@
             text-align: center;
         }
 
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+        
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;

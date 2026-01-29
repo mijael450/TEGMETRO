@@ -174,21 +174,34 @@ app.post('/api/login', async (req, res) => {
 // ============================================
 app.get('/api/clientes', async (req, res) => {
     try {
+        const { sucursal } = req.query; // Obtener sucursal de los query params
+
+        // Validar que se envió la sucursal
+        if (!sucursal) {
+            return res.status(400).json({
+                success: false,
+                error: 'Sucursal no especificada'
+            });
+        }
+
         const pool = await getConnection();
 
         // Usar vista particionada para obtener todos los clientes
-        const result = await pool.request().query(`
-            SELECT 
-                cliente_id,
-                nombre,
-                cedula_ruc,
-                telefono,
-                direccion,
-                correo,
-                sucursal
-            FROM vw_Cliente
-            ORDER BY cliente_id
-        `);
+        const result = await pool.request()
+            .input('sucursal', sql.VarChar(50), sucursal)
+            .query(`
+                SELECT 
+                    cliente_id,
+                    nombre,
+                    cedula_ruc,
+                    telefono,
+                    direccion,
+                    correo,
+                    sucursal
+                FROM vw_Cliente
+                WHERE sucursal = @sucursal
+                ORDER BY cliente_id
+            `);
 
         res.json({
             success: true,
@@ -342,71 +355,88 @@ app.delete('/api/clientes/:id', async (req, res) => {
 // API PARA EQUIPOS
 // ============================================
 app.get('/api/equipos', async (req, res) => {
-
-    const local = `
-        SELECT 
-            ev.equipo_id,
-            ev.nombre,
-            ev.codigo_interno,
-
-            et.marca,
-            et.modelo,
-            et.serie,
-            et.cliente_id,
-
-            c.nombre AS cliente_nombre,
-            a.nombre AS area_nombre,
-
-            ev.sucursal
-
-        FROM [dbo].[vw_EquipoCliente_ventas] ev
-
-        INNER JOIN [dbo].[vw_EquipoCliente_tecnico] et
-            ON ev.equipo_id = et.equipo_id
-            AND ev.sucursal = et.sucursal
-
-        LEFT JOIN vw_Cliente c
-            ON et.cliente_id = c.cliente_id
-            AND et.sucursal = c.sucursal
-
-        LEFT JOIN AreaTecnica a
-            ON et.area_id = a.area_id
-
-        ORDER BY ev.equipo_id
-    `;
-
-    const distribuido = `
-        SELECT 
-            e.equipo_id,
-            e.nombre,
-            e.codigo_interno,
-            e.marca,
-            e.modelo,
-            e.serie,
-            e.cliente_id,
-
-            c.nombre AS cliente_nombre,
-            a.nombre AS area_nombre,
-
-            e.sucursal
-
-        FROM vw_EquipoCliente e
-
-        LEFT JOIN vw_Cliente c 
-            ON e.cliente_id = c.cliente_id 
-            AND e.sucursal = c.sucursal
-
-        LEFT JOIN AreaTecnica a 
-            ON e.area_id = a.area_id
-
-        ORDER BY e.equipo_id
-    `;
-
     try {
+        const { sucursal } = req.query; // Obtener sucursal de los query params
+
+        // Validar que se envió la sucursal
+        if (!sucursal) {
+            return res.status(400).json({
+                success: false,
+                error: 'Sucursal no especificada'
+            });
+        }
+
         const pool = await getConnection();
 
-        // Modo práctica: usa consulta local
-        const result = await pool.request().query(local);
+        // Query local con filtro de sucursal
+        const local = `
+            SELECT 
+                ev.equipo_id,
+                ev.nombre,
+                ev.codigo_interno,
+
+                et.marca,
+                et.modelo,
+                et.serie,
+                et.cliente_id,
+
+                c.nombre AS cliente_nombre,
+                a.nombre AS area_nombre,
+
+                ev.sucursal
+
+            FROM [dbo].[vw_EquipoCliente_ventas] ev
+
+            INNER JOIN [dbo].[vw_EquipoCliente_tecnico] et
+                ON ev.equipo_id = et.equipo_id
+                AND ev.sucursal = et.sucursal
+
+            LEFT JOIN vw_Cliente c
+                ON et.cliente_id = c.cliente_id
+                AND et.sucursal = c.sucursal
+
+            LEFT JOIN AreaTecnica a
+                ON et.area_id = a.area_id
+
+            WHERE ev.sucursal = @sucursal
+
+            ORDER BY ev.equipo_id
+        `;
+
+        // Query distribuido con filtro de sucursal
+        const distribuido = `
+            SELECT 
+                e.equipo_id,
+                e.nombre,
+                e.codigo_interno,
+                e.marca,
+                e.modelo,
+                e.serie,
+                e.cliente_id,
+
+                c.nombre AS cliente_nombre,
+                a.nombre AS area_nombre,
+
+                e.sucursal
+
+            FROM vw_EquipoCliente e
+
+            LEFT JOIN vw_Cliente c 
+                ON e.cliente_id = c.cliente_id 
+                AND e.sucursal = c.sucursal
+
+            LEFT JOIN AreaTecnica a 
+                ON e.area_id = a.area_id
+
+            WHERE e.sucursal = @sucursal
+
+            ORDER BY e.equipo_id
+        `;
+
+        // Ejecutar con parámetros para evitar SQL injection
+        const result = await pool.request()
+            .input('sucursal', sql.VarChar(50), sucursal)
+            .query(local); // Cambia a 'distribuido' cuando uses ese modo
 
         res.json({
             success: true,

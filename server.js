@@ -173,40 +173,22 @@ app.post('/api/login', async (req, res) => {
 // API PARA CLIENTES
 // ============================================
 app.get('/api/clientes', async (req, res) => {
-
-    const local = `
-        SELECT 
-            cliente_id,
-            nombre,
-            cedula_ruc,
-            telefono,
-            direccion,
-            correo,
-            sucursal
-        FROM Cliente_Coca
-        WHERE sucursal = 'Coca'
-        ORDER BY cliente_id
-    `;
-
-    const distribuido = `
-        SELECT 
-            cliente_id,
-            nombre,
-            cedula_ruc,
-            telefono,
-            direccion,
-            correo,
-            sucursal
-        FROM vw_Cliente
-        WHERE sucursal = 'Quito'
-        ORDER BY cliente_id
-    `;
-
     try {
         const pool = await getConnection();
 
-        // Modo práctica: usa consulta local
-        const result = await pool.request().query(local);
+        // Usar vista particionada para obtener todos los clientes
+        const result = await pool.request().query(`
+            SELECT 
+                cliente_id,
+                nombre,
+                cedula_ruc,
+                telefono,
+                direccion,
+                correo,
+                sucursal
+            FROM vw_Cliente
+            ORDER BY cliente_id
+        `);
 
         res.json({
             success: true,
@@ -236,15 +218,18 @@ app.post('/api/clientes', async (req, res) => {
 
         const pool = await getConnection();
 
+        // Ejecutar SET XACT_ABORT ON antes de la inserción
+        await pool.request().query('SET XACT_ABORT ON');
+
         // Obtener el próximo ID disponible
         const maxIdResult = await pool.request()
-            .query('SELECT ISNULL(MAX(cliente_id), 0) + 1 AS nextId FROM Cliente_Coca');
+            .query('SELECT ISNULL(MAX(cliente_id), 0) + 1 AS nextId FROM vw_Cliente');
         
         const nextId = maxIdResult.recordset[0].nextId;
 
-        // Insertar en Cliente_Coca (el ID se genera automáticamente desde el BD)
+        // Insertar en vw_Cliente (vista particionada)
         const insertQuery = `
-            INSERT INTO Cliente_Coca (cliente_id, nombre, cedula_ruc, telefono, direccion, correo, sucursal)
+            INSERT INTO vw_Cliente (cliente_id, nombre, cedula_ruc, telefono, direccion, correo, sucursal)
             VALUES (@cliente_id, @nombre, @cedula_ruc, @telefono, @direccion, @correo, @sucursal)
         `;
 
@@ -287,9 +272,8 @@ app.get('/api/clientes/buscar/:query', async (req, res) => {
                 direccion,
                 correo,
                 sucursal
-            FROM Cliente_Coca
-            WHERE sucursal = 'Coca' 
-            AND (
+            FROM vw_Cliente
+            WHERE (
                 nombre LIKE '%' + @query + '%'
                 OR cedula_ruc LIKE '%' + @query + '%'
                 OR CAST(cliente_id AS VARCHAR) LIKE '%' + @query + '%'
@@ -328,7 +312,7 @@ app.put('/api/clientes/:id', async (req, res) => {
             .input('direccion', sql.VarChar, direccion)
             .input('telefono', sql.VarChar, telefono)
             .input('correo', sql.VarChar, correo)
-            .query('UPDATE Cliente_Coca SET nombre = @nombre, cedula_ruc = @cedula_ruc, direccion = @direccion, telefono = @telefono, correo = @correo WHERE cliente_id = @id');
+            .query('UPDATE vw_Cliente SET nombre = @nombre, cedula_ruc = @cedula_ruc, direccion = @direccion, telefono = @telefono, correo = @correo WHERE cliente_id = @id');
 
         res.json({ success: true });
     } catch (error) {
@@ -343,7 +327,7 @@ app.delete('/api/clientes/:id', async (req, res) => {
         const pool = await getConnection();
         await pool.request()
             .input('id', sql.Int, id)
-            .query('DELETE FROM Cliente_Coca WHERE cliente_id = @id');
+            .query('DELETE FROM vw_Cliente WHERE cliente_id = @id');
 
         res.json({ success: true });
     } catch (error) {
@@ -375,20 +359,19 @@ app.get('/api/equipos', async (req, res) => {
 
             ev.sucursal
 
-        FROM EquipoCliente_ventas_Coca ev
+        FROM [dbo].[vw_EquipoCliente_ventas] ev
 
-        INNER JOIN EquipoCliente_tecnico_Coca et
+        INNER JOIN [dbo].[vw_EquipoCliente_tecnico] et
             ON ev.equipo_id = et.equipo_id
             AND ev.sucursal = et.sucursal
 
-        LEFT JOIN Cliente_Coca c
+        LEFT JOIN vw_Cliente c
             ON et.cliente_id = c.cliente_id
             AND et.sucursal = c.sucursal
 
         LEFT JOIN AreaTecnica a
             ON et.area_id = a.area_id
 
-        WHERE ev.sucursal = 'Coca'
         ORDER BY ev.equipo_id
     `;
 
@@ -416,7 +399,6 @@ app.get('/api/equipos', async (req, res) => {
         LEFT JOIN AreaTecnica a 
             ON e.area_id = a.area_id
 
-        WHERE e.sucursal = 'Coca'
         ORDER BY e.equipo_id
     `;
 
@@ -453,48 +435,63 @@ app.post('/api/equipos', async (req, res) => {
         }
 
         const pool = await getConnection();
-        const transaction = new sql.Transaction(pool);
-        await transaction.begin();
+
+        // Validar que el cliente existe en las vistas particionadas
+        const clienteVerify = await pool.request()
+            .input('cliente_id', sql.Int, cliente_id)
+            .query('SELECT cliente_id, sucursal FROM vw_Cliente WHERE cliente_id = @cliente_id');
+
+        if (clienteVerify.recordset.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: `El cliente con ID ${cliente_id} no existe en la base de datos`
+            });
+        }
+
+        // Usar la sucursal del cliente encontrado si no se proporciona
+        const sucursalDelCliente = clienteVerify.recordset[0].sucursal;
+        const sucursalFinal = sucursal || sucursalDelCliente;
+
+        // Ejecutar SET XACT_ABORT ON antes de la inserción
+        await pool.request().query('SET XACT_ABORT ON');
 
         try {
             // Obtener el próximo ID disponible para equipos
-            const maxIdResult = await transaction.request()
-                .query('SELECT ISNULL(MAX(equipo_id), 0) + 1 AS nextId FROM EquipoCliente_ventas_Coca');
+            const maxIdResult = await pool.request()
+                .query('SELECT ISNULL(MAX(equipo_id), 0) + 1 AS nextId FROM [dbo].[vw_EquipoCliente_ventas]');
             
             const equipo_id = maxIdResult.recordset[0].nextId;
 
-            // Insertar en EquipoCliente_ventas_Coca
-            await transaction.request()
+            // Insertar en vw_EquipoCliente_ventas (vista particionada)
+            await pool.request()
                 .input('equipo_id', sql.Int, equipo_id)
                 .input('nombre', sql.VarChar(100), nombre)
                 .input('codigo_interno', sql.VarChar(50), codigo_interno || '')
-                .input('sucursal', sql.VarChar(50), sucursal || 'Coca')
+                .input('sucursal', sql.VarChar(50), sucursalFinal)
                 .query(`
-                    INSERT INTO EquipoCliente_ventas_Coca (equipo_id, nombre, codigo_interno, sucursal)
+                    INSERT INTO [dbo].[vw_EquipoCliente_ventas] (equipo_id, nombre, codigo_interno, sucursal)
                     VALUES (@equipo_id, @nombre, @codigo_interno, @sucursal)
                 `);
 
-            // Insertar en EquipoCliente_tecnico_Coca
-            await transaction.request()
+            // Insertar en vw_EquipoCliente_tecnico (vista particionada)
+            await pool.request()
                 .input('equipo_id', sql.Int, equipo_id)
                 .input('marca', sql.VarChar(100), marca)
                 .input('modelo', sql.VarChar(100), modelo)
                 .input('serie', sql.VarChar(100), serie)
                 .input('area_id', sql.Int, area_id || 1)
                 .input('cliente_id', sql.Int, cliente_id)
-                .input('sucursal', sql.VarChar(50), sucursal || 'Coca')
+                .input('sucursal', sql.VarChar(50), sucursalFinal)
                 .query(`
-                    INSERT INTO EquipoCliente_tecnico_Coca (equipo_id, marca, modelo, serie, area_id, cliente_id, sucursal)
+                    INSERT INTO [dbo].[vw_EquipoCliente_tecnico] (equipo_id, marca, modelo, serie, area_id, cliente_id, sucursal)
                     VALUES (@equipo_id, @marca, @modelo, @serie, @area_id, @cliente_id, @sucursal)
                 `);
 
-            await transaction.commit();
             res.json({
                 success: true,
                 message: 'Equipo registrado exitosamente'
             });
         } catch (error) {
-            await transaction.rollback();
             console.error('Error al crear equipo:', error);
             res.status(500).json({
                 success: false,
@@ -516,27 +513,23 @@ app.put('/api/equipos/:id', async (req, res) => {
         const { nombre, modelo, serie, codigo_interno, marca } = req.body;
 
         const pool = await getConnection();
-        const transaction = new sql.Transaction(pool);
-        await transaction.begin();
 
         try {
-            await transaction.request()
+            await pool.request()
                 .input('id', sql.Int, id)
                 .input('nombre', sql.VarChar, nombre)
                 .input('codigo_interno', sql.VarChar, codigo_interno)
-                .query('UPDATE EquipoCliente_ventas_Coca SET nombre = @nombre, codigo_interno = @codigo_interno WHERE equipo_id = @id');
+                .query('UPDATE [dbo].[vw_EquipoCliente_ventas] SET nombre = @nombre, codigo_interno = @codigo_interno WHERE equipo_id = @id');
 
-            await transaction.request()
+            await pool.request()
                 .input('id', sql.Int, id)
                 .input('modelo', sql.VarChar, modelo)
                 .input('serie', sql.VarChar, serie)
                 .input('marca', sql.VarChar, marca)
-                .query('UPDATE EquipoCliente_tecnico_Coca SET modelo = @modelo, serie = @serie, marca = @marca WHERE equipo_id = @id');
+                .query('UPDATE [dbo].[vw_EquipoCliente_tecnico] SET modelo = @modelo, serie = @serie, marca = @marca WHERE equipo_id = @id');
 
-            await transaction.commit();
             res.json({ success: true });
         } catch (error) {
-            await transaction.rollback();
             console.error('Error al actualizar equipo:', error);
             res.status(500).json({ success: false, error: 'Error al actualizar equipo' });
         }
@@ -551,22 +544,18 @@ app.delete('/api/equipos/:id', async (req, res) => {
         const { id } = req.params;
 
         const pool = await getConnection();
-        const transaction = new sql.Transaction(pool);
-        await transaction.begin();
 
         try {
-            await transaction.request()
+            await pool.request()
                 .input('id', sql.Int, id)
-                .query('DELETE FROM EquipoCliente_ventas_Coca WHERE equipo_id = @id');
+                .query('DELETE FROM [dbo].[vw_EquipoCliente_ventas] WHERE equipo_id = @id');
 
-            await transaction.request()
+            await pool.request()
                 .input('id', sql.Int, id)
-                .query('DELETE FROM EquipoCliente_tecnico_Coca WHERE equipo_id = @id');
+                .query('DELETE FROM [dbo].[vw_EquipoCliente_tecnico] WHERE equipo_id = @id');
 
-            await transaction.commit();
             res.json({ success: true });
         } catch (error) {
-            await transaction.rollback();
             console.error('Error al eliminar equipo:', error);
             res.status(500).json({ success: false, error: 'Error al eliminar equipo' });
         }
@@ -594,11 +583,11 @@ app.get('/api/calibraciones', async (req, res) => {
 
         FROM Calibracion_Coca c
 
-        INNER JOIN EquipoCliente_ventas_Coca ev
+        INNER JOIN [dbo].[vw_EquipoCliente_ventas] ev
             ON c.equipo_id = ev.equipo_id
             AND c.sucursal = ev.sucursal
 
-        INNER JOIN EquipoCliente_tecnico_Coca et
+        INNER JOIN [dbo].[vw_EquipoCliente_tecnico] et
             ON c.equipo_id = et.equipo_id
             AND c.sucursal = et.sucursal
 
@@ -675,17 +664,12 @@ app.get('/api/calibraciones', async (req, res) => {
 // API PARA VENDEDORES
 // ============================================
 app.get('/api/vendedores', async (req, res) => {
-    const local = `SELECT 
-                vendedor_id,
-                nombre,
-                cedula_ruc,
-                telefono,
-                correo,
-                sucursal
-            FROM Vendedor_Coca
-            WHERE sucursal = 'Coca'
-            ORDER BY vendedor_id`
-    const distribuido= `SELECT 
+    try {
+        const pool = await getConnection();
+
+        // Usar vista particionada para obtener todos los vendedores
+        const result = await pool.request().query(`
+            SELECT 
                 vendedor_id,
                 nombre,
                 cedula_ruc,
@@ -693,12 +677,8 @@ app.get('/api/vendedores', async (req, res) => {
                 correo,
                 sucursal
             FROM vw_Vendedor
-            WHERE sucursal = 'Quito'
-            ORDER BY vendedor_id`
-    try {
-        const pool = await getConnection();
-
-        const result = await pool.request().query(local);
+            ORDER BY vendedor_id
+        `);
 
         res.json({
             success: true,
@@ -728,14 +708,17 @@ app.post('/api/vendedores', async (req, res) => {
 
         const pool = await getConnection();
 
+        // Ejecutar SET XACT_ABORT ON antes de la inserción
+        await pool.request().query('SET XACT_ABORT ON');
+
         // Obtener el próximo ID disponible
         const maxIdResult = await pool.request()
-            .query('SELECT ISNULL(MAX(vendedor_id), 0) + 1 AS nextId FROM Vendedor_Coca');
+            .query('SELECT ISNULL(MAX(vendedor_id), 0) + 1 AS nextId FROM vw_Vendedor');
         
         const nextId = maxIdResult.recordset[0].nextId;
 
         const insertQuery = `
-            INSERT INTO Vendedor_Coca (vendedor_id, nombre, cedula_ruc, telefono, correo, sucursal)
+            INSERT INTO vw_Vendedor (vendedor_id, nombre, cedula_ruc, telefono, correo, sucursal)
             VALUES (@vendedor_id, @nombre, @cedula_ruc, @telefono, @correo, @sucursal)
         `;
 
@@ -894,36 +877,21 @@ app.post('/api/ofertas', async (req, res) => {
 // ============================================
 
 app.get('/api/tecnicos', async (req, res) => {
-
-    const local = `
-        SELECT 
-            t.tecnico_id,
-            t.nombre,
-            a.nombre AS especialidad,
-            t.sucursal
-        FROM Tecnico_Coca t
-        LEFT JOIN AreaTecnica a
-            ON t.area_id = a.area_id
-        WHERE t.sucursal = 'Coca'
-        ORDER BY t.tecnico_id
-    `;
-
-    const distribuido = `
-        SELECT 
-            t.tecnico_id,
-            t.nombre,
-            a.nombre AS especialidad,
-            t.sucursal
-        FROM vw_Tecnico t
-        LEFT JOIN AreaTecnica a
-            ON t.area_id = a.area_id
-        WHERE t.sucursal = 'Quito'
-        ORDER BY t.tecnico_id
-    `;
-
     try {
         const pool = await getConnection();
-        const result = await pool.request().query(local);
+        
+        // Usar vista particionada para obtener todos los técnicos
+        const result = await pool.request().query(`
+            SELECT 
+                t.tecnico_id,
+                t.nombre,
+                a.nombre AS especialidad,
+                t.sucursal
+            FROM vw_Tecnico t
+            LEFT JOIN AreaTecnica a
+                ON t.area_id = a.area_id
+            ORDER BY t.tecnico_id
+        `);
 
         res.json({
             success: true,
@@ -939,7 +907,6 @@ app.get('/api/tecnicos', async (req, res) => {
     }
 });
 
-// POST - Crear nuevo técnico
 app.post('/api/tecnicos', async (req, res) => {
     try {
         const { nombre, cedula, area_id, sucursal } = req.body;
@@ -954,15 +921,18 @@ app.post('/api/tecnicos', async (req, res) => {
 
         const pool = await getConnection();
 
+        // Ejecutar SET XACT_ABORT ON antes de la inserción
+        await pool.request().query('SET XACT_ABORT ON');
+
         // Obtener el próximo ID disponible
         const maxIdResult = await pool.request()
-            .query('SELECT ISNULL(MAX(tecnico_id), 0) + 1 AS nextId FROM Tecnico_Coca');
+            .query('SELECT ISNULL(MAX(tecnico_id), 0) + 1 AS nextId FROM vw_Tecnico');
         
         const nextId = maxIdResult.recordset[0].nextId;
 
-        // Insertar en Tecnico_Coca
+        // Insertar en vw_Tecnico (vista particionada)
         const insertQuery = `
-            INSERT INTO Tecnico_Coca (tecnico_id, nombre, cedula, area_id, sucursal)
+            INSERT INTO vw_Tecnico (tecnico_id, nombre, cedula, area_id, sucursal)
             VALUES (@tecnico_id, @nombre, @cedula, @area_id, @sucursal)
         `;
 

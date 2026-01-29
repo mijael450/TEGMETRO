@@ -137,7 +137,7 @@ async function cargarTecnicos() {
         
         if (result.success) {
             datos.tecnicos = result.data;
-            actualizarListaVendedores();
+            actualizarListaTecnicos();
         }
     } catch (error) {
         console.error('Error al cargar tecnicos:', error);
@@ -210,9 +210,10 @@ document.getElementById('clienteForm').addEventListener('submit', async function
     const direccionFiscal = document.getElementById('direccionFiscal').value.trim();
     const telefono = document.getElementById('telefono').value.trim();
     const email = document.getElementById('email').value.trim();
+    const sucursal = document.getElementById('sucursalCliente').value.trim();
 
     // Validaciones
-    if (!razonSocial || !rucId || !telefono || !email) {
+    if (!razonSocial || !rucId || !telefono || !email || !sucursal) {
         mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
         return;
     }
@@ -226,9 +227,6 @@ document.getElementById('clienteForm').addEventListener('submit', async function
         mostrarAlerta('Por favor, ingrese un email válido.', 'error');
         return;
     }
-
-    // Determinar sucursal (puedes hacer esto dinámico con un select)
-    const sucursal = 'Coca'; // Por defecto Coca, puedes agregar un campo en el formulario
 
     // Preparar datos para enviar (sin cliente_id, se genera automáticamente)
     const clienteData = {
@@ -353,6 +351,7 @@ document.getElementById('equipoForm').addEventListener('submit', async function 
     const marca = document.getElementById('marca').value.trim();
     const areaTecnicaSelect = document.getElementById('areaTecnica');
     const areaId = areaTecnicaSelect ? parseInt(areaTecnicaSelect.value) : 1;
+    const sucursal = document.getElementById('sucursalEquipo').value.trim();
 
     // Validaciones
     if (!clienteId) {
@@ -360,7 +359,7 @@ document.getElementById('equipoForm').addEventListener('submit', async function 
         return;
     }
 
-    if (!tipoEquipo || !modelo || !numeroSerie || !marca) {
+    if (!tipoEquipo || !modelo || !numeroSerie || !marca || !sucursal) {
         mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
         return;
     }
@@ -379,7 +378,7 @@ document.getElementById('equipoForm').addEventListener('submit', async function 
         serie: numeroSerie,
         area_id: areaId,
         cliente_id: clienteId,
-        sucursal: 'Coca'
+        sucursal: sucursal
     };
 
     try {
@@ -419,9 +418,10 @@ document.getElementById('vendedorForm').addEventListener('submit', async functio
     const cedula_ruc = document.getElementById('vendedorCedula').value.trim();
     const telefono = document.getElementById('vendedorTelefono').value.trim();
     const correo = document.getElementById('vendedorEmail').value.trim();
+    const sucursal = document.getElementById('sucursalVendedor').value.trim();
 
     // Validaciones
-    if (!nombre || !cedula_ruc || !telefono || !correo) {
+    if (!nombre || !cedula_ruc || !telefono || !correo || !sucursal) {
         mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
         return;
     }
@@ -437,7 +437,7 @@ document.getElementById('vendedorForm').addEventListener('submit', async functio
         cedula_ruc: cedula_ruc,
         telefono: telefono,
         correo: correo,
-        sucursal: 'Coca'
+        sucursal: sucursal
     };
 
     try {
@@ -474,9 +474,10 @@ document.getElementById('tecnicoForm').addEventListener('submit', async function
     const nombre = document.getElementById('tecnicoNombre').value.trim();
     const cedula = document.getElementById('tecnicoCedula').value.trim();
     const area_id = parseInt(document.getElementById('tecnicoArea').value);
+    const sucursal = document.getElementById('sucursalTecnico').value.trim();
 
     // Validaciones
-    if (!nombre || !cedula || !area_id) {
+    if (!nombre || !cedula || !area_id || !sucursal) {
         mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
         return;
     }
@@ -486,7 +487,7 @@ document.getElementById('tecnicoForm').addEventListener('submit', async function
         nombre: nombre,
         cedula: cedula,
         area_id: area_id,
-        sucursal: 'Coca'
+        sucursal: sucursal
     };
 
     try {

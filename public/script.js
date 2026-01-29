@@ -228,11 +228,10 @@ document.getElementById('clienteForm').addEventListener('submit', async function
     }
 
     // Determinar sucursal (puedes hacer esto dinámico con un select)
-    const sucursal = 'Quito'; // Por defecto Quito, puedes agregar un campo en el formulario
+    const sucursal = 'Coca'; // Por defecto Coca, puedes agregar un campo en el formulario
 
-    // Preparar datos para enviar
+    // Preparar datos para enviar (sin cliente_id, se genera automáticamente)
     const clienteData = {
-        cliente_id: obtenerSiguienteIdCliente(),
         nombre: razonSocial,
         cedula_ruc: rucId,
         telefono: telefono,
@@ -297,7 +296,7 @@ document.getElementById('buscarCliente').addEventListener('input', async functio
             div.innerHTML = `
                 <p><strong>${cliente.nombre}</strong> (ID: ${cliente.cliente_id})</p>
                 <p>RUC/ID: ${cliente.cedula_ruc} | Sucursal: <span class="badge badge-${cliente.sucursal.toLowerCase()}">${cliente.sucursal}</span></p>
-                <button class="btn btn-primary" onclick="seleccionarCliente(${cliente.cliente_id})">Seleccionar</button>
+                <button class="btn btn-primary" onclick="seleccionarClienteDirecto(${JSON.stringify(cliente).replace(/"/g, '&quot;')})">Seleccionar</button>
             `;
             resultadosDiv.appendChild(div);
         });
@@ -315,6 +314,19 @@ window.seleccionarCliente = function (clienteId) {
         return;
     }
 
+    document.getElementById('clienteId').value = cliente.cliente_id;
+    document.getElementById('clienteSeleccionado').innerHTML = `
+        <p><strong>Cliente seleccionado:</strong> ${cliente.nombre} (ID: ${cliente.cliente_id})</p>
+        <p>RUC/ID: ${cliente.cedula_ruc} | Sucursal: <span class="badge badge-${cliente.sucursal.toLowerCase()}">${cliente.sucursal}</span></p>
+        <p><em>El equipo se guardará automáticamente en ${cliente.sucursal} (Fragmentación Derivada)</em></p>
+    `;
+    document.getElementById('clienteSeleccionado').style.display = 'block';
+    document.getElementById('resultadosClientes').innerHTML = '';
+    document.getElementById('buscarCliente').value = '';
+};
+
+// Seleccionar cliente directamente desde los resultados de búsqueda
+window.seleccionarClienteDirecto = function (cliente) {
     document.getElementById('clienteId').value = cliente.cliente_id;
     document.getElementById('clienteSeleccionado').innerHTML = `
         <p><strong>Cliente seleccionado:</strong> ${cliente.nombre} (ID: ${cliente.cliente_id})</p>
@@ -358,16 +370,16 @@ document.getElementById('equipoForm').addEventListener('submit', async function 
         return;
     }
 
-    // Preparar datos
+    // Preparar datos (sin equipo_id, se genera automáticamente)
     const equipoData = {
-        equipo_id: obtenerSiguienteIdEquipo(),
         nombre: tipoEquipo,
         codigo_interno: codigoInterno,
         marca: marca,
         modelo: modelo,
         serie: numeroSerie,
         area_id: areaId,
-        cliente_id: clienteId
+        cliente_id: clienteId,
+        sucursal: 'Coca'
     };
 
     try {
@@ -393,6 +405,111 @@ document.getElementById('equipoForm').addEventListener('submit', async function 
     } catch (error) {
         console.error('Error:', error);
         mostrarAlerta('Error al registrar equipo', 'error');
+    }
+});
+
+// ============================================
+// FORMULARIO DE VENDEDOR
+// ============================================
+
+document.getElementById('vendedorForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const nombre = document.getElementById('vendedorNombre').value.trim();
+    const cedula_ruc = document.getElementById('vendedorCedula').value.trim();
+    const telefono = document.getElementById('vendedorTelefono').value.trim();
+    const correo = document.getElementById('vendedorEmail').value.trim();
+
+    // Validaciones
+    if (!nombre || !cedula_ruc || !telefono || !correo) {
+        mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
+        return;
+    }
+
+    if (!correo.includes('@') || !correo.includes('.')) {
+        mostrarAlerta('Por favor, ingrese un email válido.', 'error');
+        return;
+    }
+
+    // Preparar datos
+    const vendedorData = {
+        nombre: nombre,
+        cedula_ruc: cedula_ruc,
+        telefono: telefono,
+        correo: correo,
+        sucursal: 'Coca'
+    };
+
+    try {
+        const response = await fetch('/api/vendedores', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(vendedorData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            mostrarAlerta(result.message || 'Vendedor registrado exitosamente');
+            document.getElementById('vendedorForm').reset();
+            await cargarVendedores(); // Recargar lista
+        } else {
+            mostrarAlerta(result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al registrar vendedor', 'error');
+    }
+});
+
+// ============================================
+// FORMULARIO DE TÉCNICO
+// ============================================
+
+document.getElementById('tecnicoForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const nombre = document.getElementById('tecnicoNombre').value.trim();
+    const cedula = document.getElementById('tecnicoCedula').value.trim();
+    const area_id = parseInt(document.getElementById('tecnicoArea').value);
+
+    // Validaciones
+    if (!nombre || !cedula || !area_id) {
+        mostrarAlerta('Por favor, complete todos los campos obligatorios.', 'error');
+        return;
+    }
+
+    // Preparar datos
+    const tecnicoData = {
+        nombre: nombre,
+        cedula: cedula,
+        area_id: area_id,
+        sucursal: 'Coca'
+    };
+
+    try {
+        const response = await fetch('/api/tecnicos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(tecnicoData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            mostrarAlerta(result.message || 'Técnico registrado exitosamente');
+            document.getElementById('tecnicoForm').reset();
+            await cargarTecnicos(); // Recargar lista
+        } else {
+            mostrarAlerta(result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al registrar técnico', 'error');
     }
 });
 

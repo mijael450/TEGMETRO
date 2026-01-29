@@ -183,8 +183,8 @@ app.get('/api/clientes', async (req, res) => {
             direccion,
             correo,
             sucursal
-        FROM Cliente_Quito
-        WHERE sucursal = 'Quito'
+        FROM Cliente_Coca
+        WHERE sucursal = 'Coca'
         ORDER BY cliente_id
     `;
 
@@ -222,6 +222,99 @@ app.get('/api/clientes', async (req, res) => {
     }
 });
 
+app.post('/api/clientes', async (req, res) => {
+    try {
+        const { nombre, cedula_ruc, direccion, telefono, correo, sucursal } = req.body;
+
+        // Validaciones
+        if (!nombre || !cedula_ruc || !telefono || !correo) {
+            return res.status(400).json({
+                success: false,
+                error: 'Faltan campos obligatorios (nombre, RUC/ID, teléfono, correo)'
+            });
+        }
+
+        const pool = await getConnection();
+
+        // Obtener el próximo ID disponible
+        const maxIdResult = await pool.request()
+            .query('SELECT ISNULL(MAX(cliente_id), 0) + 1 AS nextId FROM Cliente_Coca');
+        
+        const nextId = maxIdResult.recordset[0].nextId;
+
+        // Insertar en Cliente_Coca (el ID se genera automáticamente desde el BD)
+        const insertQuery = `
+            INSERT INTO Cliente_Coca (cliente_id, nombre, cedula_ruc, telefono, direccion, correo, sucursal)
+            VALUES (@cliente_id, @nombre, @cedula_ruc, @telefono, @direccion, @correo, @sucursal)
+        `;
+
+        await pool.request()
+            .input('cliente_id', sql.Int, nextId)
+            .input('nombre', sql.VarChar(150), nombre)
+            .input('cedula_ruc', sql.VarChar(20), cedula_ruc)
+            .input('telefono', sql.VarChar(20), telefono)
+            .input('direccion', sql.VarChar(200), direccion || '')
+            .input('correo', sql.VarChar(100), correo)
+            .input('sucursal', sql.VarChar(50), sucursal || 'Coca')
+            .query(insertQuery);
+
+        res.json({
+            success: true,
+            message: 'Cliente registrado exitosamente'
+        });
+
+    } catch (error) {
+        console.error('Error al crear cliente:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+app.get('/api/clientes/buscar/:query', async (req, res) => {
+    try {
+        const { query } = req.params;
+        const pool = await getConnection();
+
+        // Buscar por nombre, RUC o ID
+        const searchQuery = `
+            SELECT 
+                cliente_id,
+                nombre,
+                cedula_ruc,
+                telefono,
+                direccion,
+                correo,
+                sucursal
+            FROM Cliente_Coca
+            WHERE sucursal = 'Coca' 
+            AND (
+                nombre LIKE '%' + @query + '%'
+                OR cedula_ruc LIKE '%' + @query + '%'
+                OR CAST(cliente_id AS VARCHAR) LIKE '%' + @query + '%'
+            )
+            ORDER BY cliente_id
+        `;
+
+        const result = await pool.request()
+            .input('query', sql.VarChar(100), query)
+            .query(searchQuery);
+
+        res.json({
+            success: true,
+            data: result.recordset
+        });
+
+    } catch (error) {
+        console.error('Error al buscar clientes:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 app.put('/api/clientes/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -235,7 +328,7 @@ app.put('/api/clientes/:id', async (req, res) => {
             .input('direccion', sql.VarChar, direccion)
             .input('telefono', sql.VarChar, telefono)
             .input('correo', sql.VarChar, correo)
-            .query('UPDATE Cliente_Quito SET nombre = @nombre, cedula_ruc = @cedula_ruc, direccion = @direccion, telefono = @telefono, correo = @correo WHERE cliente_id = @id');
+            .query('UPDATE Cliente_Coca SET nombre = @nombre, cedula_ruc = @cedula_ruc, direccion = @direccion, telefono = @telefono, correo = @correo WHERE cliente_id = @id');
 
         res.json({ success: true });
     } catch (error) {
@@ -250,7 +343,7 @@ app.delete('/api/clientes/:id', async (req, res) => {
         const pool = await getConnection();
         await pool.request()
             .input('id', sql.Int, id)
-            .query('DELETE FROM Cliente_Quito WHERE cliente_id = @id');
+            .query('DELETE FROM Cliente_Coca WHERE cliente_id = @id');
 
         res.json({ success: true });
     } catch (error) {
@@ -282,20 +375,20 @@ app.get('/api/equipos', async (req, res) => {
 
             ev.sucursal
 
-        FROM EquipoCliente_ventas_Quito ev
+        FROM EquipoCliente_ventas_Coca ev
 
-        INNER JOIN EquipoCliente_tecnico_Quito et
+        INNER JOIN EquipoCliente_tecnico_Coca et
             ON ev.equipo_id = et.equipo_id
             AND ev.sucursal = et.sucursal
 
-        LEFT JOIN Cliente_Quito c
+        LEFT JOIN Cliente_Coca c
             ON et.cliente_id = c.cliente_id
             AND et.sucursal = c.sucursal
 
         LEFT JOIN AreaTecnica a
             ON et.area_id = a.area_id
 
-        WHERE ev.sucursal = 'Quito'
+        WHERE ev.sucursal = 'Coca'
         ORDER BY ev.equipo_id
     `;
 
@@ -323,7 +416,7 @@ app.get('/api/equipos', async (req, res) => {
         LEFT JOIN AreaTecnica a 
             ON e.area_id = a.area_id
 
-        WHERE e.sucursal = 'Quito'
+        WHERE e.sucursal = 'Coca'
         ORDER BY e.equipo_id
     `;
 
@@ -347,6 +440,76 @@ app.get('/api/equipos', async (req, res) => {
     }
 });
 
+app.post('/api/equipos', async (req, res) => {
+    try {
+        const { nombre, codigo_interno, marca, modelo, serie, area_id, cliente_id, sucursal } = req.body;
+
+        // Validaciones
+        if (!nombre || !marca || !modelo || !serie || !cliente_id) {
+            return res.status(400).json({
+                success: false,
+                error: 'Faltan campos obligatorios'
+            });
+        }
+
+        const pool = await getConnection();
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            // Obtener el próximo ID disponible para equipos
+            const maxIdResult = await transaction.request()
+                .query('SELECT ISNULL(MAX(equipo_id), 0) + 1 AS nextId FROM EquipoCliente_ventas_Coca');
+            
+            const equipo_id = maxIdResult.recordset[0].nextId;
+
+            // Insertar en EquipoCliente_ventas_Coca
+            await transaction.request()
+                .input('equipo_id', sql.Int, equipo_id)
+                .input('nombre', sql.VarChar(100), nombre)
+                .input('codigo_interno', sql.VarChar(50), codigo_interno || '')
+                .input('sucursal', sql.VarChar(50), sucursal || 'Coca')
+                .query(`
+                    INSERT INTO EquipoCliente_ventas_Coca (equipo_id, nombre, codigo_interno, sucursal)
+                    VALUES (@equipo_id, @nombre, @codigo_interno, @sucursal)
+                `);
+
+            // Insertar en EquipoCliente_tecnico_Coca
+            await transaction.request()
+                .input('equipo_id', sql.Int, equipo_id)
+                .input('marca', sql.VarChar(100), marca)
+                .input('modelo', sql.VarChar(100), modelo)
+                .input('serie', sql.VarChar(100), serie)
+                .input('area_id', sql.Int, area_id || 1)
+                .input('cliente_id', sql.Int, cliente_id)
+                .input('sucursal', sql.VarChar(50), sucursal || 'Coca')
+                .query(`
+                    INSERT INTO EquipoCliente_tecnico_Coca (equipo_id, marca, modelo, serie, area_id, cliente_id, sucursal)
+                    VALUES (@equipo_id, @marca, @modelo, @serie, @area_id, @cliente_id, @sucursal)
+                `);
+
+            await transaction.commit();
+            res.json({
+                success: true,
+                message: 'Equipo registrado exitosamente'
+            });
+        } catch (error) {
+            await transaction.rollback();
+            console.error('Error al crear equipo:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    } catch (error) {
+        console.error('Error al crear equipo:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 app.put('/api/equipos/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -361,14 +524,14 @@ app.put('/api/equipos/:id', async (req, res) => {
                 .input('id', sql.Int, id)
                 .input('nombre', sql.VarChar, nombre)
                 .input('codigo_interno', sql.VarChar, codigo_interno)
-                .query('UPDATE EquipoCliente_ventas_Quito SET nombre = @nombre, codigo_interno = @codigo_interno WHERE equipo_id = @id');
+                .query('UPDATE EquipoCliente_ventas_Coca SET nombre = @nombre, codigo_interno = @codigo_interno WHERE equipo_id = @id');
 
             await transaction.request()
                 .input('id', sql.Int, id)
                 .input('modelo', sql.VarChar, modelo)
                 .input('serie', sql.VarChar, serie)
                 .input('marca', sql.VarChar, marca)
-                .query('UPDATE EquipoCliente_tecnico_Quito SET modelo = @modelo, serie = @serie, marca = @marca WHERE equipo_id = @id');
+                .query('UPDATE EquipoCliente_tecnico_Coca SET modelo = @modelo, serie = @serie, marca = @marca WHERE equipo_id = @id');
 
             await transaction.commit();
             res.json({ success: true });
@@ -394,11 +557,11 @@ app.delete('/api/equipos/:id', async (req, res) => {
         try {
             await transaction.request()
                 .input('id', sql.Int, id)
-                .query('DELETE FROM EquipoCliente_ventas_Quito WHERE equipo_id = @id');
+                .query('DELETE FROM EquipoCliente_ventas_Coca WHERE equipo_id = @id');
 
             await transaction.request()
                 .input('id', sql.Int, id)
-                .query('DELETE FROM EquipoCliente_tecnico_Quito WHERE equipo_id = @id');
+                .query('DELETE FROM EquipoCliente_tecnico_Coca WHERE equipo_id = @id');
 
             await transaction.commit();
             res.json({ success: true });
@@ -429,29 +592,29 @@ app.get('/api/calibraciones', async (req, res) => {
             cli.nombre AS cliente_nombre,
             tec.nombre AS tecnico_nombre
 
-        FROM Calibracion_Quito c
+        FROM Calibracion_Coca c
 
-        INNER JOIN EquipoCliente_ventas_Quito ev
+        INNER JOIN EquipoCliente_ventas_Coca ev
             ON c.equipo_id = ev.equipo_id
             AND c.sucursal = ev.sucursal
 
-        INNER JOIN EquipoCliente_tecnico_Quito et
+        INNER JOIN EquipoCliente_tecnico_Coca et
             ON c.equipo_id = et.equipo_id
             AND c.sucursal = et.sucursal
 
-        INNER JOIN Tecnico_Quito tec
+        INNER JOIN Tecnico_Coca tec
             ON c.tecnico_id = tec.tecnico_id
             AND c.sucursal = tec.sucursal
 
-        INNER JOIN Oferta_Quito o
+        INNER JOIN Oferta_Coca o
             ON c.oferta_id = o.oferta_id
             AND c.sucursal = o.sucursal
 
-        INNER JOIN Cliente_Quito cli
+        INNER JOIN Cliente_Coca cli
             ON o.cliente_id = cli.cliente_id
             AND o.sucursal = cli.sucursal
 
-        WHERE c.sucursal = 'Quito'
+        WHERE c.sucursal = 'Coca'
         ORDER BY c.calibracion_id
     `;
 
@@ -519,8 +682,8 @@ app.get('/api/vendedores', async (req, res) => {
                 telefono,
                 correo,
                 sucursal
-            FROM Vendedor_Quito
-            WHERE sucursal = 'Quito'
+            FROM Vendedor_Coca
+            WHERE sucursal = 'Coca'
             ORDER BY vendedor_id`
     const distribuido= `SELECT 
                 vendedor_id,
@@ -551,6 +714,54 @@ app.get('/api/vendedores', async (req, res) => {
     }
 });
 
+app.post('/api/vendedores', async (req, res) => {
+    try {
+        const { nombre, cedula_ruc, telefono, correo, sucursal } = req.body;
+
+        // Validaciones
+        if (!nombre || !cedula_ruc || !telefono || !correo) {
+            return res.status(400).json({
+                success: false,
+                error: 'Faltan campos obligatorios'
+            });
+        }
+
+        const pool = await getConnection();
+
+        // Obtener el próximo ID disponible
+        const maxIdResult = await pool.request()
+            .query('SELECT ISNULL(MAX(vendedor_id), 0) + 1 AS nextId FROM Vendedor_Coca');
+        
+        const nextId = maxIdResult.recordset[0].nextId;
+
+        const insertQuery = `
+            INSERT INTO Vendedor_Coca (vendedor_id, nombre, cedula_ruc, telefono, correo, sucursal)
+            VALUES (@vendedor_id, @nombre, @cedula_ruc, @telefono, @correo, @sucursal)
+        `;
+
+        await pool.request()
+            .input('vendedor_id', sql.Int, nextId)
+            .input('nombre', sql.VarChar(100), nombre)
+            .input('cedula_ruc', sql.VarChar(20), cedula_ruc)
+            .input('telefono', sql.VarChar(20), telefono)
+            .input('correo', sql.VarChar(100), correo)
+            .input('sucursal', sql.VarChar(50), sucursal || 'Quito')
+            .query(insertQuery);
+
+        res.json({
+            success: true,
+            message: 'Vendedor registrado exitosamente'
+        });
+
+    } catch (error) {
+        console.error('Error al crear vendedor:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // ============================================
 // API PARA OFERTAS
 // ============================================
@@ -568,17 +779,17 @@ app.get('/api/ofertas', async (req, res) => {
             cli.nombre AS cliente_nombre,
             ven.nombre AS vendedor_nombre
 
-        FROM Oferta_Quito o
+        FROM Oferta_Coca o
 
-        INNER JOIN Cliente_Quito cli
+        INNER JOIN Cliente_Coca cli
             ON o.cliente_id = cli.cliente_id
             AND o.sucursal = cli.sucursal
 
-        INNER JOIN Vendedor_Quito ven
+        INNER JOIN Vendedor_Coca ven
             ON o.vendedor_id = ven.vendedor_id
             AND o.sucursal = ven.sucursal
 
-        WHERE o.sucursal = 'Quito'
+        WHERE o.sucursal = 'Coca'
         ORDER BY o.oferta_id
     `;
 
@@ -628,6 +839,56 @@ app.get('/api/ofertas', async (req, res) => {
     }
 });
 
+app.post('/api/ofertas', async (req, res) => {
+    try {
+        const { numero_oferta, fecha, estado, observaciones, cliente_id, vendedor_id, sucursal } = req.body;
+
+        // Validaciones
+        if (!numero_oferta || !cliente_id || !vendedor_id) {
+            return res.status(400).json({
+                success: false,
+                error: 'Faltan campos obligatorios'
+            });
+        }
+
+        const pool = await getConnection();
+
+        // Obtener el próximo ID disponible
+        const maxIdResult = await pool.request()
+            .query('SELECT ISNULL(MAX(oferta_id), 0) + 1 AS nextId FROM Oferta_Coca');
+        
+        const nextId = maxIdResult.recordset[0].nextId;
+
+        const insertQuery = `
+            INSERT INTO Oferta_Coca (oferta_id, numero_oferta, fecha, estado, observaciones, cliente_id, vendedor_id, sucursal)
+            VALUES (@oferta_id, @numero_oferta, @fecha, @estado, @observaciones, @cliente_id, @vendedor_id, @sucursal)
+        `;
+
+        await pool.request()
+            .input('oferta_id', sql.Int, nextId)
+            .input('numero_oferta', sql.VarChar(50), numero_oferta)
+            .input('fecha', sql.DateTime, fecha ? new Date(fecha) : new Date())
+            .input('estado', sql.VarChar(20), estado || 'Pendiente')
+            .input('observaciones', sql.VarChar(500), observaciones || '')
+            .input('cliente_id', sql.Int, cliente_id)
+            .input('vendedor_id', sql.Int, vendedor_id)
+            .input('sucursal', sql.VarChar(50), sucursal || 'Coca')
+            .query(insertQuery);
+
+        res.json({
+            success: true,
+            message: 'Oferta registrada exitosamente'
+        });
+
+    } catch (error) {
+        console.error('Error al crear oferta:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // ============================================
 // API PARA TÉCNICOS
 // ============================================
@@ -640,10 +901,10 @@ app.get('/api/tecnicos', async (req, res) => {
             t.nombre,
             a.nombre AS especialidad,
             t.sucursal
-        FROM Tecnico_Quito t
+        FROM Tecnico_Coca t
         LEFT JOIN AreaTecnica a
             ON t.area_id = a.area_id
-        WHERE t.sucursal = 'Quito'
+        WHERE t.sucursal = 'Coca'
         ORDER BY t.tecnico_id
     `;
 
@@ -693,17 +954,24 @@ app.post('/api/tecnicos', async (req, res) => {
 
         const pool = await getConnection();
 
-        // Insertar en Tecnico_Quito
+        // Obtener el próximo ID disponible
+        const maxIdResult = await pool.request()
+            .query('SELECT ISNULL(MAX(tecnico_id), 0) + 1 AS nextId FROM Tecnico_Coca');
+        
+        const nextId = maxIdResult.recordset[0].nextId;
+
+        // Insertar en Tecnico_Coca
         const insertQuery = `
-            INSERT INTO Tecnico_Quito (nombre, cedula, area_id, sucursal)
-            VALUES (@nombre, @cedula, @area_id, @sucursal)
+            INSERT INTO Tecnico_Coca (tecnico_id, nombre, cedula, area_id, sucursal)
+            VALUES (@tecnico_id, @nombre, @cedula, @area_id, @sucursal)
         `;
 
         await pool.request()
+            .input('tecnico_id', sql.Int, nextId)
             .input('nombre', sql.VarChar(100), nombre)
             .input('cedula', sql.VarChar(20), cedula)
             .input('area_id', sql.Int, area_id || 1)
-            .input('sucursal', sql.VarChar(50), sucursal || 'Quito')
+            .input('sucursal', sql.VarChar(50), sucursal || 'Coca')
             .query(insertQuery);
 
         res.json({
